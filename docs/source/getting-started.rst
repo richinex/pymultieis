@@ -1,3 +1,5 @@
+.. _my-reference-label:
+
 =========================================
 Getting started with :code:`pymultieis`
 =========================================
@@ -236,3 +238,5 @@ If no fname is provided, a default name 'fit' is used. See an example of saving 
 
 .. important::
   🎉 Voila! That's it 🎉
+
+
