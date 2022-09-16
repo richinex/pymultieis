@@ -2,7 +2,7 @@
 Getting started with :code:`pymultieis`
 =========================================
 
-:code:`pymultieis` is a Python package for processing multiple electrochemical impedance spectroscopy (EIS) data. 
+:code:`pymultieis` is a Python package for processing multiple electrochemical impedance spectroscopy (EIS) data.
 It uses an object oriented approach and is based on the :code:`torch` library.
 :code:`pymultieis` provides a Multieis class with methods for fitting, visualizing and saving the results thereafter.
 
@@ -12,15 +12,12 @@ The following steps are good starting points towards analyzing your own data usi
 
 
 .. hint::
-  If you get stuck or believe you have found a bug, please feel free to open an
-  .. `issue on GitHub <https://github.com/ECSHackWeek/impedance.py/issues>`_.
+  Please feel free to open an issue if you encounter any difficulties or bugs.
 
 Step 1: Installation
 ====================
 
-To install :code:`pymultieis` and it's dependencies
-(:code:`torch`, :code:`numpy`, and :code:`matplotlib`) is from
-`PyPI <https://pypi.org/project/impedance/>`_ using pip:
+:code:`pymultieis` should be installed via PyPI
 
 .. code-block:: bash
 
@@ -31,13 +28,13 @@ To install :code:`pymultieis` and it's dependencies
 Step 2: Load your data
 ================================
 
-The data which is loaded should comprises a vector of frequencies at which the immittance data was taken, 
+The data which is loaded should comprises a vector of frequencies at which the immittance data was taken,
 and the 2-D array of complex immittances (impedances or admittances) where the number of rows correspond
-to the length of the frequencies vector and the length of the columns is the number of spectra to be fitted. 
-It is assumed that the frequencies are uniform for all the spectra in a particular series. 
+to the length of the frequencies vector and the length of the columns is the number of spectra to be fitted.
+It is assumed that the frequencies are uniform for all the spectra in a particular series.
 The frequencies and immittance shall be our freq and Z when we create our Multieis instance.
 In the example below the files which were originally stored as numpy arrays
-will be converted to torch tensors using the :code:`pymultieis` function. 
+will be converted to torch tensors using the :code:`pymultieis` function.
 
 We assume that we have our files in the data folder one step above working directory
 
@@ -59,8 +56,8 @@ We assume that we have our files in the data folder one step above working direc
 
   # Load a 2-D array of admittances to be fitted
   >>> Y = torch.as_tensor(np.load('../data/redox_exp_50/Y_50.npy'))
-  
-  # Load a 2-D array of the standard deviation of the admittances 
+
+  # Load a 2-D array of the standard deviation of the admittances
   # Here we assume we know the standard deviation of our admittances.
   >>> Yerr = torch.tensor(np.load('../data/redox_exp_50/sigma_Y_50.npy'))
 
@@ -78,15 +75,15 @@ We assume that we have our files in the data folder one step above working direc
   torch.Size([45, 50])
 
 .. important::
-  :code:`pymultieis` does not offer a preprocessing module since other packages offer this feature. 
+  :code:`pymultieis` does not offer a preprocessing module since other packages offer this feature.
   For instance files from different vendors (ZPlot, Gamry, Parstat, Autolab) can be read using the `preprocessing module` offered by `impedancepy <https://impedancepy.readthedocs.io/en/latest/preprocessing.html>`_
 
 Step 3: Define your impedance/admittance model
 ===================================================
 
-Next we define our equivalent circuit/immittance model as a normal python function. 
-This approach eliminates the need for prebuilt circuit models and offers researchers a far greater flexibility since 
-any custom immittance function can be fitted to their data. 
+Next we define our equivalent circuit/immittance model as a normal python function.
+This approach eliminates the need for prebuilt circuit models and offers researchers a far greater flexibility since
+any custom immittance function can be fitted to their data.
 
 For instance we shall convert modified *Randles* circuit shown below to a python function which returns the admittance of the circuit.
 
@@ -121,22 +118,22 @@ For instance we shall convert modified *Randles* circuit shown below to a python
   elements in parallel, we add their admittances.
 
 
-Next, we define an initial guess, bounds and smoothing factor for each of the parameters as a tensor. 
+Next, we define an initial guess, bounds and smoothing factor for each of the parameters as a tensor.
 
 .. code-block:: python
 
   p0 = torch.tensor([1.6295e+02, 3.0678e-08, 9.3104e-01, 1.1865e+04, 4.7125e+05, 1.3296e+06])
 
   bounds = [[1e-15,1e15], [1e-8, 1e2], [1e-1,1e0], [1e-15,1e15], [1e-15,1e15], [1e-15,1e15]]
-  
+
   smf = torch.tensor([100000.0, 100000.0, 100000.0, 100000.0, 100000.0, 100000.0])
 
 
 Step 4: Create an instance of the fitting class
 ===================================================
 
-An instance our our  multieis class is created by passing it our initial guesses :code:`p0`, frequency :code:`F`, admittance :code:`Z`, 
-the bounds, :code:`bounds` for each parameter, the smoothing factor (:code:`smf`), the model :code:`redox`, the weight :code:`Yerr` 
+An instance our our  multieis class is created by passing it our initial guesses :code:`p0`, frequency :code:`F`, admittance :code:`Z`,
+the bounds, :code:`bounds` for each parameter, the smoothing factor (:code:`smf`), the model :code:`redox`, the weight :code:`Yerr`
 and the :code:`immittance` we are modeling which in this case is the admittance.
 
 .. code-block:: python
@@ -150,10 +147,10 @@ Step 5: Fit the model to data
 
 Once our class in instantiated, we fit the data by calling any of the fit methods.
 :code:`pymultieis` offers a :code:`fit_deterministic()` and :code:`fit_deterministic2()`,
-:code:`fit_refine()` and a :code:`fit_stochastic()` method. 
+:code:`fit_refine()` and a :code:`fit_stochastic()` method.
 The :code:`fit_deterministic()` and :code:`fit_deterministic2()` have one adjustable parameter :code:`n_iter`
-which determines the number of iterations used in the minimization while :code:`fit_stochastic()` takes in two arguments, 
-a learning rate (:code:`lr`) and :code:`num_epochs`, 
+which determines the number of iterations used in the minimization while :code:`fit_stochastic()` takes in two arguments,
+a learning rate (:code:`lr`) and :code:`num_epochs`,
 which for most problems, setting ``learning_rate`` = 1e-3 and ``num_epochs`` = 5e5 is probably very good.
 
 .. code-block:: python
@@ -168,7 +165,7 @@ Step 6: Visualize the results
 
 
 In order to make it easy to visualize the results of the fit, :code:`pymultieis` offers three different plotting methods.
-We call the :code:`plot_nyquist()` method on the instance we created to view the complex plane plots, 
+We call the :code:`plot_nyquist()` method on the instance we created to view the complex plane plots,
 the :code:`plot_bode()` to view the bode plots and the :code:`plot_params()` method to view the parameter plot. Thus we have a total of four generated plots:
 
 * The complex plane plots (Nyquist) - the impedance and the admittance plots are generated. This method can be called before or after a fit.
@@ -176,7 +173,7 @@ the :code:`plot_bode()` to view the bode plots and the :code:`plot_params()` met
 * The plot of the optimal parameters - can only be called after a fit.
 
 The :code:`plot_nyquist()` and :code:`plot_bode()` methods take in a :code:`steps` argument which determines the interval over which the plots are sampled.
-The default argument for the steps parameter is 1. A maximum of 20 plots can be shown to avoid cluttering the screen. 
+The default argument for the steps parameter is 1. A maximum of 20 plots can be shown to avoid cluttering the screen.
 The :code:`plot_params()` method has a :code:`show_errorbar` parameter. When set to True, the parameters are plotted with their respective standard deviations shown as errorbars.
 
 .. code-block:: python
@@ -208,9 +205,9 @@ The :code:`plot_params()` method has a :code:`show_errorbar` parameter. When set
 Step 7: Save the results
 =====================================
 
-In addition, :code:`pymultieis` provides methods to save the generated plots. The :code:`save_plot_nyquist()` saves the complex plane (Nyquist) plots, 
-the :code:`save_plot_bode()` saves the Bode plots while the :code:`save_plot_params()` saves the plot of the optimal parameters. 
-The :code:`save_plot_params()` can only be called after a fit is performed. 
+In addition, :code:`pymultieis` provides methods to save the generated plots. The :code:`save_plot_nyquist()` saves the complex plane (Nyquist) plots,
+the :code:`save_plot_bode()` saves the Bode plots while the :code:`save_plot_params()` saves the plot of the optimal parameters.
+The :code:`save_plot_params()` can only be called after a fit is performed.
 
 .. code-block:: python
 
@@ -220,12 +217,12 @@ The :code:`save_plot_params()` can only be called after a fit is performed.
 
 
 .. note::
-   if the plotting methods are not called before saving methods, 
+   if the plotting methods are not called before saving methods,
    default arguments are used to automatically generate the plots..
 
-The is also a :code:`save_results()` method which saves the optimal paramaters popt, the standard error of the parameters perr, 
-the predicted spectra Z_pred and the metrics associated with the fit.  The save methods have an fname parameter which takes as 
-argument a string representing the name the sub-folder within the current working directory into which plots and results are saved. 
+The is also a :code:`save_results()` method which saves the optimal paramaters popt, the standard error of the parameters perr,
+the predicted spectra Z_pred and the metrics associated with the fit.  The save methods have an fname parameter which takes as
+argument a string representing the name the sub-folder within the current working directory into which plots and results are saved.
 If no fname is provided, a default name 'fit' is used. See an example of saving below.
 
 .. code-block:: python
