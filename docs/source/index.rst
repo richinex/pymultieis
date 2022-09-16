@@ -9,13 +9,13 @@ pymultieis
 
    "Simplicity is the ultimate sophistication - Leonardo da Vinci"
 
-:code:`pymultieis` offers a robust approach to batch-fitting electrochemical impedance spectra with a dependence. 
-Dependence implies that the spectra being fitted are gradually varying or similar to each other 
-and were obtained as a result of continuous change of in the property of the electrochemical system under study. 
+:code:`pymultieis` offers a robust approach to batch-fitting electrochemical impedance spectra with a dependence.
+Dependence implies that the spectra being fitted are gradually varying or similar to each other
+and were obtained as a result of continuous change of in the property of the electrochemical system under study.
 Such properties include but are not limited to temperature, potential, state of charge and depth of discharge.
 
-The batch-fitting algorithm implemented in pymultieis allows the kinetic parameters of the system 
-such as the charge transfer resistance, double layer capacitance and Warburg coefficient to be obtained 
+The batch-fitting algorithm implemented in pymultieis allows the kinetic parameters of the system
+such as the charge transfer resistance, double layer capacitance and Warburg coefficient to be obtained
 as curves which vary as a function of the dependent variable under study.
 
 The multieis in :code:`pymultieis` is an represents for :code:`Multiple Electrochemical Impedance Spectra`
@@ -27,7 +27,7 @@ Installation
 ------------
 
 :code:`pymultieis` can be installed
-from `PyPI <https://pypi.org/project/impedance/>`_ 
+from `PyPI <https://pypi.org/project/impedance/>`_
 using pip:
 
 .. code-block:: bash
@@ -47,7 +47,7 @@ impedance.py requires:
 -   SciPy (>=1.9.1)
 -   NumPy (>=1.23.3)
 -   Pandas (>=1.4.4)
--   Matplotlib (>=3.5.3)
+-   Matplotlib (>=3.6.0)
 -   Pytorch-minimize
 
 
@@ -56,23 +56,24 @@ Opening these will require Jupyter notebook or Jupyter lab.
 
 Examples and Documentation
 ---------------------------
-:doc:`./getting-started` contains a detailed walk
-through of how to get started from scratch. :code:`pymultieis` assumes you are already familiar
-with basic python. Detailed walkthroughs can be found in the :code:`examples/` directory.
-(:doc:`./examples/getting-started` is a great place to start). 
-The documentation can be found at 
-`impedancepy.readthedocs.io <https://impedancepy.readthedocs.io/en/latest/>`_.
+:doc:`./getting-started` contains a detailed guide on getting started with :code:`pymultieis`.
+It is assumed that the user is already familiar with basic python syntax.
+Detailed tutorials on several aspects of :code:`pymultieis` can be found in the :code:`examples/` directory.
+The documentation can be found at
+
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
-   getting-started 
+   getting-started
    pymultieis
    examples
+
    batch-fit-vs-sequential-fit
    how-it-works
    troubleshooting
+   includeme
 
 
 
