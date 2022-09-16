@@ -1,15 +1,15 @@
-pandas==1.4.4
-scipy==1.9.1
-torch==1.12.1
-matplotlib==3.5
-numpy==1.23.1
-pytest==5.2
-Sphinx==5.1.1
-sphinx-rtd-theme==1.0.0
-nbsphinx==0.8.9
-sphinxcontrib-napoleon==0.7
-ipykernel==6.15.3
-flake8==5.0.4
+pandas
+scipy
+torch
+matplotlib
+numpy
+pytest
+Sphinx
+sphinx-rtd-theme
+nbsphinx
+sphinxcontrib-napoleon
+ipykernel
+
 
 
 
