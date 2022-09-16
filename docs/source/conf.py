@@ -41,12 +41,10 @@ extensions = [
 
 
 templates_path = ['_templates']
-source_suffix = '.rst'
+source_suffix = ['.rst', '.md']
 master_doc = 'index'
 # exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', '**.ipynb_checkpoints']
 exclude_patterns = ['_build', '**.ipynb_checkpoints']
-
-
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
