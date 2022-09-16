@@ -46,4 +46,3 @@ Examples
 *********************
 
 Detailed tutorials on several aspects of ``pymultieis`` can be found on the [examples page](https://pymultieis.readthedocs.io/en/latest/examples.html).
-
