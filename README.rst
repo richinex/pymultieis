@@ -19,12 +19,7 @@ The multieis in :code:`pymultieis` is an represents for :code:`Multiple Electroc
 
 
 Installation
-------------
-
-:code:`pymultieis` can be installed
-from `PyPI <https://pypi.org/project/impedance/>`_
-using pip:
-
+*************
 .. code-block:: bash
 
    pip install pymultieis
@@ -33,7 +28,7 @@ using pip:
 on getting started with :code:`pymultieis`.
 
 Dependencies
-~~~~~~~~~~~~
+**************
 
 impedance.py requires:
 

@@ -26,10 +26,6 @@ The multieis in :code:`pymultieis` is an represents for :code:`Multiple Electroc
 Installation
 ------------
 
-:code:`pymultieis` can be installed
-from `PyPI <https://pypi.org/project/impedance/>`_
-using pip:
-
 .. code-block:: bash
 
    pip install pymultieis
@@ -69,7 +65,6 @@ The documentation can be found at
    getting-started
    pymultieis
    examples
-
    batch-fit-vs-sequential-fit
    how-it-works
    troubleshooting
