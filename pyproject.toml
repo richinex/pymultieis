@@ -18,9 +18,9 @@ Sphinx = "^5.1.1"
 sphinx-rtd-theme = "^1.0.0"
 nbsphinx = "^0.8.9"
 sphinxcontrib-napoleon = "^0.7"
-black = "^22.8.0"
-flake8 = "^5.0.4"
 ipykernel = "^6.15.3"
+flake8 = "^5.0.4"
+pre-commit = "^2.20.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
