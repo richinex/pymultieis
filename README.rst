@@ -14,7 +14,7 @@ as curves which vary as a function of the dependent variable under study.
 
 The ``py`` in ``pymultieis`` represents python while the ``multieis`` is an abbreviation for ``Multiple Electrochemical Impedance Spectra``.
 
-:code:`pymultieis` offers methods modules for model fiting, model validation, visualization,
+``pymultieis`` offers methods modules for model fiting, model validation, visualization,
 
 
 Installation
@@ -22,7 +22,7 @@ Installation
 
    pip install pymultieis
 
-`Getting started with pymultieis <https://pymultieis.readthedocs.io/en/latest/getting-started.html>` contains a step-by-step tutorial
+[Getting started with pymultieis](https://pymultieis.readthedocs.io/en/latest/getting-started.html) contains a step-by-step tutorial
 fitting your data with ``pymultieis``.
 
 Dependencies
@@ -45,5 +45,5 @@ Opening these will require Jupyter notebook or Jupyter lab.
 Examples
 *********************
 
-Detailed tutorials on several aspects of ``pymultieis`` can be found on the `examples page<https://pymultieis.readthedocs.io/en/latest/examples.html>`.
+Detailed tutorials on several aspects of ``pymultieis`` can be found on the [examples page](https://pymultieis.readthedocs.io/en/latest/examples.html).
 
