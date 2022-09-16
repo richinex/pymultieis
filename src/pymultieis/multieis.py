@@ -234,7 +234,8 @@ class Multieis:
         """
         lb_vec = torch.zeros(
             self.num_params * self.num_eis
-            - (self.num_eis - 1) * torch.sum(torch.isinf(self.smf))
+            - (self.num_eis - 1)
+            * torch.sum(torch.isinf(self.smf))
         )
         ub_vec = torch.zeros(
             self.num_params * self.num_eis
@@ -320,7 +321,8 @@ class Multieis:
             )
         return par_ext
 
-    def wrss_func(self, p: torch.tensor,
+    def wrss_func(self,
+                  p: torch.tensor,
                   f: torch.tensor,
                   z: torch.tensor,
                   zerr_re: torch.tensor,
@@ -353,7 +355,8 @@ class Multieis:
         wrss = torch.linalg.vector_norm(((z_concat - z_model) / sigma)) ** 2
         return wrss
 
-    def wrss_func_ls(self, p: torch.tensor,
+    def wrss_func_ls(self,
+                     p: torch.tensor,
                      f: torch.tensor,
                      z: torch.tensor,
                      zerr_re: torch.tensor,
@@ -391,7 +394,8 @@ class Multieis:
         residuals = (z_concat - z_model) / sigma
         return residuals
 
-    def wrms_func(self, p: torch.tensor,
+    def wrms_func(self,
+                  p: torch.tensor,
                   f: torch.tensor,
                   z: torch.tensor,
                   zerr_re: torch.tensor,
@@ -424,7 +428,8 @@ class Multieis:
         wrms = wrss / dof
         return wrms
 
-    def compute_perr(self, P: torch.tensor,
+    def compute_perr(self,
+                     P: torch.tensor,
                      F: torch.tensor,
                      Z: torch.tensor,
                      Zerr_Re: torch.tensor,
@@ -439,16 +444,16 @@ class Multieis:
         using the hessian inverse of the parameters at the minimum computed
         via automatic differentiation
 
-        :param p: A 2D tensor of parameter values
+        :param P: A 2D tensor of parameter values
 
-        :param f: A 1D tensor of frequency
+        :param F: A 1D tensor of frequency
 
-        :param z: A 2D tensor of complex immittance
+        :param Z: A 2D tensor of complex immittance
 
-        :param zerr_re: A 2D tensor of weights for \
+        :param Zerr_Re: A 2D tensor of weights for \
                         the real part of the immittance
 
-        :param zerr_im: A 2D tensor of weights for \
+        :param Zerr_Im: A 2D tensor of weights for \
                         the imaginary part of the immittance
 
         :param LB: A 1D tensor of values for \
@@ -456,6 +461,9 @@ class Multieis:
 
         :param LB: A 1D tensor of values for \
                    the upper bounds (for the total parameters)
+
+        :param smf: A tensor of real elements same size as p0. \
+            when set to inf, the corresponding parameter is kept constant
 
         :returns: A 2D tensor of the standard error on the parameters
 
@@ -486,21 +494,44 @@ class Multieis:
         # if the error is nan, a value of 1 is assigned.
         return torch.nan_to_num(perr, nan=1.0)
 
-    def cost_func(
-        self,
-        P: torch.tensor,  # A matrix of parameter values
-        F: torch.tensor,  # A vector of frequncies
-        Z: torch.tensor,  # A matrix of complex immittance
-        Zerr_Re: torch.tensor,  # A matrix of weights for the real part of the immittance
-        Zerr_Im: torch.tensor,  # A matrix of weights for the imaginary part of the immittance
-        LB: torch.tensor,  # A matrix of values for the lower bound
-        UB: torch.tensor,  # A matrix of values for the upper bound
-        smf: torch.tensor,  # A vector of values for the smoothing factor
-    ) -> torch.tensor:  # A value of the total objective function
+    def cost_func(self,
+                  P: torch.tensor,
+                  F: torch.tensor,
+                  Z: torch.tensor,
+                  Zerr_Re: torch.tensor,
+                  Zerr_Im: torch.tensor,
+                  LB: torch.tensor,
+                  UB: torch.tensor,
+                  smf: torch.tensor
+                  ) -> torch.tensor:
         """
         This function computes the total scalar objective function to minimize
         which is a combination of the weighted residual sum of squares
         and the smoothing factor divided by the degrees of freedom
+
+        :param P: A 2D tensor of parameter values
+
+        :param F: A 1D tensor of frequency
+
+        :param Z: A 2D tensor of complex immittance
+
+        :param Zerr_Re: A 2D tensor of weights for \
+                        the real part of the immittance
+
+        :param Zerr_Im: A 2D tensor of weights for \
+                        the imaginary part of the immittance
+
+        :param LB: A 1D tensor of values for \
+                   the lower bounds (for the total parameters)
+
+        :param LB: A 1D tensor of values for \
+                   the upper bounds (for the total parameters)
+
+        :param smf: A tensor of real elements same size as p0. \
+            when set to inf, the corresponding parameter is kept constant
+
+        :returns: A scalar value of the total objective function
+
         """
         P_log = torch.zeros(self.num_params, self.num_eis)
         P_norm = torch.zeros(self.num_params, self.num_eis)
@@ -517,23 +548,23 @@ class Multieis:
             )
 
         smf_1 = torch.where(torch.isinf(smf), 0.0, smf)
-        chi_smf = ((((self.d2m @ P_log.T) * (self.d2m @ P_log.T))).sum(0) * smf_1).sum()
+        chi_smf = ((((self.d2m @ P_log.T) * (self.d2m @ P_log.T)))
+                   .sum(0) * smf_1).sum()
         wrss_tot = _vmap(self.wrss_func, in_dims=(1, None, 1, 1, 1))(
             P_norm, F, Z, Zerr_Re, Zerr_Im
         )
         return (torch.sum(wrss_tot) + chi_smf) / self.dof
 
-    def compute_aic(
-        self,
-        p: torch.tensor,  # A vector of parameter values
-        f: torch.tensor,  # A vector of frequncies
-        z: torch.tensor,  # A vector of complex immittance
-        zerr_re: torch.tensor,  # A vector of weights for the real part of the immittance
-        zerr_im: torch.tensor,  # A vector of weights for the imaginary part of the immittance
-    ) -> torch.tensor:  # A value for the Akaike Information Criterion (AIC)
+    def compute_aic(self,
+                    p: torch.tensor,
+                    f: torch.tensor,
+                    z: torch.tensor,
+                    zerr_re: torch.tensor,
+                    zerr_im: torch.tensor,
+                    ) -> torch.tensor:
         """
         Computes the Akaike Information Criterion according to
-        `M. Ingdal et al. <https://www.sciencedirect.com/science/article/abs/pii/S0013468619311739>`_
+        `M. Ingdal et al`_
 
         :param p: A 1D tensor of parameter values
 
@@ -541,10 +572,11 @@ class Multieis:
 
         :param z: A 1D tensor of complex immittance
 
-        :param zerr_re: A 1D tensor of weights for the real part of the immittance
+        :param zerr_re: A 1D tensor of weights for \
+                        the real part of the immittance
 
-        :param zerr_im: A 1D tensor of weights for the imaginary part of the immittance
-
+        :param zerr_im: A 1D tensor of weights for \
+                        the imaginary part of the immittance
 
 
         :returns: A value for the AIC
@@ -563,7 +595,8 @@ class Multieis:
         elif self.weight_name == "unit":
             m2lnL = (
                 2 * self.num_freq * torch.log(torch.tensor(2 * torch.pi))
-                - 2 * self.num_freq * torch.log(torch.tensor(2 * self.num_freq))
+                - 2 * self.num_freq
+                * torch.log(torch.tensor(2 * self.num_freq))
                 + 2 * self.num_freq
                 + 2 * self.num_freq * torch.log(wrss)
             )
@@ -574,7 +607,8 @@ class Multieis:
             wt_im = wt_re
             m2lnL = (
                 2 * self.num_freq * torch.log(torch.tensor(2 * torch.pi))
-                - 2 * self.num_freq * torch.log(torch.tensor(2 * self.num_freq))
+                - 2 * self.num_freq
+                * torch.log(torch.tensor(2 * self.num_freq))
                 + 2 * self.num_freq
                 - torch.sum(torch.log(wt_re))
                 - torch.sum(torch.log(wt_im))
@@ -584,16 +618,21 @@ class Multieis:
         return aic
 
     def fit_deterministic(
-        self, n_iter: int = 5000  # Number of iterations
+        self, n_iter: int = 5000
     ) -> Tuple[
         torch.tensor, torch.tensor, torch.tensor, torch.tensor, torch.tensor
-    ]:  # Optimal parameters, parameter error, weighted residual mean square, and the AIC
+    ]:
 
         """
-        Fitting routine best used when the weighting is any of the modulus, proportional or unit.
+        Fitting routine.
 
-        :returns: A tuple containing the optimal parameters (popt), the standard error of the parameters (perr),
-            the objective function at the minimum (chisqr), the total cost function (chitot) and the AIC
+        :params n_iter: Number of iterations
+
+
+        :returns: A tuple containing the optimal parameters (popt), \
+                  the standard error of the parameters (perr), \
+                  the objective function at the minimum (chisqr), \
+                  the total cost function (chitot) and the AIC
         """
         if hasattr(self, "popt") and self.popt.shape[1] == self.Z.shape[1]:
             print("Using popt")
@@ -611,7 +650,8 @@ class Multieis:
         # Optimizer 1 uses the BFGS algorithm
         start = datetime.now()
         optimizer1 = ScipyMinimizer(
-            params=[self.par_log], method="bfgs", tol=1e-16, options={"maxiter": n_iter}
+            params=[self.par_log], method="bfgs",
+            tol=1e-16, options={"maxiter": n_iter}
         )
         self.iteration = 0
 
@@ -630,7 +670,8 @@ class Multieis:
             loss.backward()
             self.iteration += 1
             print(
-                f"\rIteration : {self.iteration}, Loss : {loss.detach().clone():.5e}",
+                "\rIteration : {}, Loss : {:.5e}"
+                .format(self.iteration, loss.detach().clone()),
                 end="",
             )
             if self.iteration % 1000 == 0:
@@ -672,7 +713,8 @@ class Multieis:
         self.hess_inv = torch.tensor(optimizer2._result.hess_inv.todense())
         self.chitot = optimizer2._result.fun
 
-        # Check if the hess_inv output from the optimizer is identity. If yes, use the compute_perr function
+        # Check if the hess_inv output from the optimizer is identity.
+        # If yes, use the compute_perr function
         if torch.allclose(
             self.hess_inv.type(torch.FloatTensor), torch.eye(len(self.par_log))
         ):
@@ -725,13 +767,16 @@ class Multieis:
         self, n_iter: int = 5000  # Number of iterations
     ) -> Tuple[
         torch.tensor, torch.tensor, torch.tensor, torch.tensor, torch.tensor
-    ]:  # Optimal parameters, parameter error, weighted residual mean square, and the AIC
+    ]:  # Optimal parameters, parameter error,
+        # weighted residual mean square, and the AIC
 
         """
         Fitting routine best used when the weighting is the standard deviation.
 
-        :returns: A tuple containing the optimal parameters (popt), the standard error of the parameters (perr),
-            the objective function at the minimum (chisqr), the total cost function (chitot) and the AIC
+        :returns: A tuple containing the optimal parameters (popt), \
+                  the standard error of the parameters (perr), \
+                  the objective function at the minimum (chisqr), \
+                  the total cost function (chitot) and the AIC
         """
 
         if hasattr(self, "popt") and self.popt.shape[1] == self.Z.shape[1]:
@@ -769,7 +814,8 @@ class Multieis:
             loss.backward()
             self.iteration += 1
             print(
-                f"\rIteration : {self.iteration}, Loss : {loss.detach().clone():.5e}",
+                "\rIteration : {}, Loss : {:.5e}"
+                .format(self.iteration, loss.detach().clone()),
                 end="",
             )
             if self.iteration % 1000 == 0:
@@ -809,7 +855,8 @@ class Multieis:
         self.chitot = optimizer2._result.fun
         self.hess_inv = optimizer2._result.hess_inv
 
-        # Check if the hess_inv output from the optimizer is identity. If yes, use the compute_perr function
+        # Check if the hess_inv output from the optimizer is identity.
+        # If yes, use the compute_perr function
         if torch.allclose(
             self.hess_inv.type(torch.FloatTensor), torch.eye(len(self.par_log))
         ):
@@ -860,19 +907,23 @@ class Multieis:
         num_epochs: int = 1e5,  # Number of epochs
     ) -> Tuple[
         torch.tensor, torch.tensor, torch.tensor, torch.tensor, torch.tensor
-    ]:  # Optimal parameters, parameter error, weighted residual mean square, and the AIC
-        # https://stats.stackexchange.com/questions/232719/what-is-the-reason-that-the-adam-optimizer-is-considered-robust-to-the-value-of
+    ]:  # Optimal parameters, parameter error,
+        # weighted residual mean square, and the AIC
+
         """
         Fitting routine which uses the Adam optimizer.
         It is important to note here that even stocahstic search procedures,
-        although applicable to large scale problems do not find the global optimum with certainty (Aster, Richard pg 249)
+        although applicable to large scale problems do not \
+        find the global optimum with certainty (Aster, Richard pg 249)
 
         :param lr: Learning rate
 
         :param num_epochs: Number of epochs
 
-        :returns: A tuple containing the optimal parameters (popt), the standard error of the parameters (perr),
-                    the objective function at the minimum (chisqr), the total cost function (chitot) and the AIC
+        :returns: A tuple containing the optimal parameters (popt), \
+                  the standard error of the parameters (perr), \
+                  the objective function at the minimum (chisqr), \
+                  the total cost function (chitot) and the AIC
         """
         self.learning_rate = lr
         self.num_epochs = int(num_epochs)
@@ -930,7 +981,8 @@ class Multieis:
         self.popt = self.convert_to_external(res.x).detach()
         self.chitot = res.fun
         self.hess_inv = res.hess_inv
-        # Check if the hess_inv output from the optimizer is identity. If yes, use the compute_perr function
+        # Check if the hess_inv output from the optimizer is identity.
+        # If yes, use the compute_perr function
         if torch.allclose(
             self.hess_inv.type(torch.FloatTensor), torch.eye(len(self.par_log))
         ):
@@ -981,7 +1033,8 @@ class Multieis:
         self, n_iter: int = 5000  # Number of iterations
     ) -> Tuple[
         torch.tensor, torch.tensor, torch.tensor, torch.tensor
-    ]:  # Optimal parameters, parameter error, weighted residual mean square, and the AIC
+    ]:  # Optimal parameters, parameter error,
+        # weighted residual mean square, and the AIC
         """
         Fitting routine with the smoothing factor set to 1.
         """
@@ -1019,7 +1072,11 @@ class Multieis:
             )
             loss.backward()
             self.iteration += 1
-            print(f"\rIteration : {self.iteration}, Loss : {loss.item():.5e}", end="")
+            print(
+                "\rIteration : {}, Loss : {:.5e}"
+                .format(self.iteration, loss.item()),
+                end=""
+            )
             if self.iteration % 1000 == 0:
                 print("")
             return loss
@@ -1066,18 +1123,25 @@ class Multieis:
         self,
         indices: Sequence[
             int
-        ] = None,  # List containing the indices of spectra to plot. If set to None, all spectra are fitted sequentially
+        ] = None,
     ) -> Tuple[
         torch.tensor, torch.tensor, torch.tensor, torch.tensor
-    ]:  # Optimal parameters, parameter error, weighted residual mean square, and the AIC
+    ]:
         """
         Fits each spectra individually using the L-M least squares method
+
+        :params indices: List containing the indices of spectra to plot. \
+                         If set to None, all spectra are fitted sequentially
+
+        :returns: The optimal parameters, parameter error, \
+                  weighted residual mean square, and the AIC
         """
 
         if indices:
             assert all(
                 i < self.num_eis for i in indices
-            ), "One or more values in the indices list are greater the number of spectra supplied"
+            ), ("One or more values in the indices list "
+                "are greater the number of spectra supplied")
             self.indices = indices
             self.n_fits = len(self.indices)
         elif indices is None:
@@ -1085,13 +1149,16 @@ class Multieis:
             self.n_fits = len(self.indices)
 
         else:
-            raise AttributeError("Please choose the index or indices of spectra to fit")
+            raise AttributeError("""
+            Please choose the index or indices of spectra to fit""")
 
         if hasattr(self, "popt") and self.popt.shape[1] == self.Z.shape[1]:
 
-            self.par_log = self.convert_to_internal(self.popt).type(torch.DoubleTensor)
+            self.par_log = \
+                self.convert_to_internal(self.popt).type(torch.DoubleTensor)
         else:
-            self.par_log = self.convert_to_internal(self.p0).type(torch.DoubleTensor)
+            self.par_log = \
+                self.convert_to_internal(self.p0).type(torch.DoubleTensor)
 
         popt = torch.zeros(self.num_params, self.n_fits)
         perr = torch.zeros(self.num_params, self.n_fits)
@@ -1155,7 +1222,10 @@ class Multieis:
                 cov_mat = hess_inv * (chisqr[i])
                 perr[:, i] = torch.sqrt(torch.diag(cov_mat)) * popt[:, i]
             except torch.linalg.LinAlgError:
-                print(f"Matrix is singular for spectra {val}, using QR decomposition")
+                print(
+                    "Matrix is singular for spectra {}, using QR decomposition"
+                    .format(val)
+                )
                 grads = torch.autograd.functional.jacobian(
                     self.func, (popt[:, i], self.F)
                 )[0]
@@ -1168,12 +1238,15 @@ class Multieis:
                 Q1, R1 = torch.linalg.qr(torch.cat([vre, vim], dim=0))
                 try:
                     invR1 = torch.linalg.inv(R1)
-                    perr[:, i] = torch.linalg.vector_norm(invR1, dim=1) * torch.sqrt(
+                    perr[:, i] = \
+                        torch.linalg.vector_norm(invR1, dim=1) * torch.sqrt(
                         chisqr[i]
                     )
                 except torch.linalg.LinAlgError:
                     print(
-                        f"Matrix is singular for spectra {val}, perr will be assigned a value of ones"
+                        """Matrix is singular for spectra {},
+                        perr will be assigned a value of ones"""
+                        .format(val)
                     )
                     perr[:, i] = torch.ones(self.num_params)
 
@@ -1192,16 +1265,20 @@ class Multieis:
 
     def compute_perr_mc(
         self, n_boots: int = 500  # Number of bootstrap samples
-    ) -> torch.tensor:  # A 2-D tensor containing the estimated parameter standard deviation
+    ) -> torch.tensor:
 
         """
-        The bootstrap approach used here is similar to the fixed-X resampling. In this approach we construct bootstrap observations
-        from the fitted values and the residuals. The assumption that the functional form of the model is implicit in this method.
-        We also assume that the errors are identically distributed with constant variance.
+        The bootstrap approach used here is \
+        similar to the fixed-X resampling. \
+        In this approach we construct bootstrap observations \
+        from the fitted values and the residuals. \
+        The assumption that the functional form of the model \
+        is implicit in this method. We also assume that \
+        the errors are identically distributed with constant variance.
         (Bootstrapping Regression Models - J Fox)
-        Macdonald proposed checking the precisionof fitting parameters using Monte Carlo data simulations followed by fitting.
-        This provides information about how accurately the parameters can be determined for an assumed amount of error in the spectra
-        (Electrochemical Impedance Spectroscopy and its Applications - A Lasia)
+
+        :returns: A 2-D tensor containing the \
+                  estimated parameter standard deviation
         """
 
         if hasattr(self, "popt") and self.popt.shape[1] == self.Z.shape[1]:
@@ -1211,7 +1288,9 @@ class Multieis:
             ).requires_grad_(True)
         else:
             raise ValueError(
-                "Please run fit_deterministic(), fit_refine() or fit_stochastic() before using the compute_perr_mc() method"
+                """Please run fit_deterministic(), fit_refine()
+                or fit_stochastic() before using
+                the compute_perr_mc() method"""
             )
 
         self.n_boots = n_boots
@@ -1221,9 +1300,12 @@ class Multieis:
 
         self.Z_pred, self.Y_pred = self.model_prediction(self.popt, self.F)
 
-        # Taking the sqrt of the chisquare gives us an estimate of the error in measured immittance values
-        rnd_resid_Re = torch.randn(self.num_freq, self.num_eis) * torch.sqrt(wrms)
-        rnd_resid_Im = torch.randn(self.num_freq, self.num_eis) * torch.sqrt(wrms)
+        # Taking the sqrt of the chisquare gives us an
+        # estimate of the error in measured immittance values
+        rnd_resid_Re = \
+            torch.randn(self.num_freq, self.num_eis) * torch.sqrt(wrms)
+        rnd_resid_Im = \
+            torch.randn(self.num_freq, self.num_eis) * torch.sqrt(wrms)
 
         if self.weight_name == "sigma":
             Zerr_Re_mc = self.Zerr_Re
@@ -1243,7 +1325,8 @@ class Multieis:
         # Make containers to hold bootstrapped values
         self.popt_mc = torch.zeros(self.n_boots, self.num_params, self.num_eis)
         self.Z_pred_mc_tot = torch.zeros(
-            size=(self.n_boots, self.num_freq, self.num_eis), dtype=torch.complex64
+            size=(self.n_boots, self.num_freq, self.num_eis),
+            dtype=torch.complex64
         )
         self.chisqr_mc = torch.zeros(self.n_boots)
         popt_log_mc = torch.zeros(
@@ -1252,7 +1335,8 @@ class Multieis:
             - (self.num_eis - 1) * torch.sum(torch.isinf(self.smf)),
         )
 
-        # Here we loop through the number of boots and run the minimization algorithm using the do_minimize function
+        # Here we loop through the number of boots and
+        # run the minimization algorithm using the do_minimize function
         for i in range(self.n_boots):
             par_log_mc = self.convert_to_internal(self.p0).requires_grad_(True)
             sidx = np.random.choice(idx, replace=True, size=self.num_freq)
@@ -1284,19 +1368,41 @@ class Multieis:
         self.perr = torch.std(self.popt_mc, unbiased=False, dim=0)
         return self.perr
 
-    def do_minimize(
-        self,
-        p,  # A vector of parameter values
-        f,  # A vector of frequncies
-        z,  # A vector of complex immittance
-        zerr_re,  # A vector of weights for the real part of the immittance
-        zerr_im,  # A vector of weights for the imaginary part of the immittance
-        lb,  # A vector of lower bounds
-        ub,  # A vector of upper bounds
-        smf,  # A vector containing the smoothing factors
-    ):
+    def do_minimize(self,
+                    p,
+                    f,
+                    z,
+                    zerr_re,
+                    zerr_im,
+                    lb,
+                    ub,
+                    smf
+                    ):
         """
+
         Fitting routine used in the bootstrap Monte Carlo procedure
+
+
+        :param p: A 1D tensor of parameter values
+
+        :param f: A 1D tensor of frequency
+
+        :param z: A 1D tensor of complex immittance
+
+        :param zerr_re: A 1D tensor of weights for \
+                        the real part of the immittance
+
+        :param zerr_im: A 1D tensor of weights for \
+                        the imaginary part of the immittance
+
+        :param lb: A 1D tensor of values for \
+                   the lower bounds (for the total parameters)
+
+        :param ub: A 1D tensor of values for \
+                   the upper bounds (for the total parameters)
+
+        :param smf: A tensor of real elements same size as p0. \
+            when set to inf, the corresponding parameter is kept constant
         """
         res = minimize(
             lambda p0: self.cost_func(p0, f, z, zerr_re, zerr_im, lb, ub, smf),
@@ -1306,18 +1412,38 @@ class Multieis:
         )
         return res
 
-    def jac_fun(
-        self,
-        p,  # A vector of parameter values
-        f,  # A vector of frequncies
-        z,  # A vector of complex immittance
-        zerr_re,  # A vector of weights for the real part of the immittance
-        zerr_im,  # A vector of weights for the imaginary part of the immittance
-        lb,  # A vector of lower bounds
-        ub,  # A vector of upper bounds
-    ) -> torch.tensor:  # Returns the Jacobian matrix
+    def jac_fun(self,
+                p,
+                f,
+                z,
+                zerr_re,
+                zerr_im,
+                lb,
+                ub,
+                ) -> torch.tensor:
         """
-        Computes the Jacobian of the least squares objective function w.r.t the parameters
+        Computes the Jacobian of the least squares \
+        objective function w.r.t the parameters
+
+        :param p: A 1D tensor of parameter values
+
+        :param f: A 1D tensor of frequency
+
+        :param z: A 1D tensor of complex immittance
+
+        :param zerr_re: A 1D tensor of weights for \
+                        the real part of the immittance
+
+        :param zerr_im: A 1D tensor of weights for \
+                        the imaginary part of the immittance
+
+        :param lb: A 1D tensor of values for \
+                   the lower bounds (for the total parameters)
+
+        :param ub: A 1D tensor of values for \
+                   the upper bounds (for the total parameters)
+
+        :returns:  Returns the Jacobian matrix
         """
         return torch.autograd.functional.jacobian(
             self.wrss_func_ls, (p, f, z, zerr_re, zerr_im, lb, ub)
@@ -1325,18 +1451,39 @@ class Multieis:
 
     def do_minimize_ls(
         self,
-        p: torch.tensor,  # A vector of parameter values
-        f: torch.tensor,  # A vector of frequncies
-        z: torch.tensor,  # A vector of complex immittance
-        zerr_re: torch.tensor,  # A vector of weights for the real part of the immittance
-        zerr_im: torch.tensor,  # A vector of weights for the imaginary part of the immittance
-        lb: torch.tensor,  # A vector of lower bounds
-        ub: torch.tensor,  # A vector of upper bounds
+        p: torch.tensor,
+        f: torch.tensor,
+        z: torch.tensor,
+        zerr_re: torch.tensor,
+        zerr_im: torch.tensor,
+        lb: torch.tensor,
+        ub: torch.tensor,
     ) -> Tuple[
         torch.tensor, torch.tensor
-    ]:  # Returns the log-scaled optimal parameters and the weighted residual mean square
+    ]:  #
         """
         Least squares routine - uses wrss_func_ls
+
+        :param p: A 1D tensor of parameter values
+
+        :param f: A 1D tensor of frequency
+
+        :param z: A 1D tensor of complex immittance
+
+        :param zerr_re: A 1D tensor of weights for \
+                        the real part of the immittance
+
+        :param zerr_im: A 1D tensor of weights for \
+                        the imaginary part of the immittance
+
+        :param lb: A 1D tensor of values for \
+                   the lower bounds (for the total parameters)
+
+        :param ub: A 1D tensor of values for \
+                   the upper bounds (for the total parameters)
+
+        :returns: Returns the log-scaled optimal parameters \
+                  and the weighted residual mean square
         """
         res = least_squares(
             lambda p0: self.wrss_func_ls(p0, f, z, zerr_re, zerr_im, lb, ub), p
@@ -1345,12 +1492,23 @@ class Multieis:
 
     def encode(
         self,
-        p: torch.tensor,  # A vector of parameter values
-        lb: torch.tensor,  # A vector of lower bounds
-        ub: torch.tensor,  # A vector of upper bounds
-    ) -> torch.tensor:  # Returns the parameter vector in log scale (internal coordinates)
+        p: torch.tensor,
+        lb: torch.tensor,
+        ub: torch.tensor,
+    ) -> torch.tensor:
         """
         Converts external parameters to internal parameters
+
+        :param p: A 1D tensor of parameter values
+
+        :param lb: A 1D tensor of values for \
+                   the lower bounds (for the total parameters)
+
+        :param ub: A 1D tensor of values for \
+                   the upper bounds (for the total parameters)
+
+        :returns:  Returns the parameter vector \
+                   in log scale (internal coordinates)
         """
         p = torch.log10((p - lb) / (1 - p / ub))
         return p
@@ -1360,20 +1518,43 @@ class Multieis:
     ) -> torch.tensor:
         """
         Converts internal parameters to external parameters
+
+        :param p: A 1D tensor of parameter values
+
+        :param lb: A 1D tensor of values for \
+                   the lower bounds (for the total parameters)
+
+        :param ub: A 1D tensor of values for \
+                   the upper bounds (for the total parameters)
+
+        :returns:  Returns the parameter vector \
+                   in normal scale (external coordinates)
         """
         p = (lb + 10 ** (p)) / (1 + 10 ** (p) / ub)
         return p
 
-    def real_to_complex(
-        self,
-        z: torch.tensor,  # Takes a real vector of length 2n where n is the number of frequencies
-    ) -> torch.tensor:  # Returns a complex vector of length n.
+    def real_to_complex(self,
+                        z: torch.tensor,
+                        ) -> torch.tensor:
+        """
+        :param z: Takes a real vector of length 2n \
+                  where n is the number of frequencies
+
+        :returns: Returns a complex vector of length n.
+        """
         return z[: len(z) // 2] + 1j * z[len(z) // 2:]
 
-    def complex_to_real(
-        self,
-        z: torch.tensor,  # Takes a complex vector of length n where n is the number of frequencies.
-    ) -> torch.tensor:  # Returns a real vector of length 2n.
+    def complex_to_real(self,
+                        z: torch.tensor,
+                        ) -> torch.tensor:
+
+        """
+        :param z: Takes a complex vector of length n \
+                  where n is the number of frequencies
+
+        :returns: Returns a real vector of length 2n
+        """
+
         return torch.cat((z.real, z.imag), dim=0)
 
     def model_prediction(
@@ -1408,14 +1589,27 @@ class Multieis:
     ):  # The complex plane plots.
         """
         Creates the complex plane plots (aka Nyquist plots)
+
+        :param steps: Spacing between plots. Defaults to 1
+
+        :keyword fpath1: Additional keyword arguments \
+                         passed to plot (i.e file path)
+
+        :keyword fpath2: Additional keyword arguments \
+                    passed to plot (i.e file path)
+
         """
 
         self.steps = steps
         assert (
             self.steps <= self.Z_exp.shape[1]
-        ), f"Steps with size {steps} is greater that the number of fitted spectra with size {self.Z_exp.shape[1]}"
+        ), (
+            """Steps with size {} is greater that
+            the number of fitted spectra with size {}"""
+            .format(steps, self.Z_exp.shape[1]))
 
-        # If the fit method has not been called, only the plots of the experimental data are presented
+        # If the fit method has not been called,
+        # only the plots of the experimental data are presented
         if not hasattr(self, "popt"):
             indices = [i for i in range(self.Z_exp.shape[1])]
 
@@ -1425,7 +1619,8 @@ class Multieis:
             n_cols = 4
             n_rows = 5
 
-            # If self.immittance is impedance then fig_nyquist1 is the impedance plot while fig_nyquist2 is the admittance plot
+            # If self.immittance is impedance then fig_nyquist1 is the
+            # impedance plot while fig_nyquist2 is the admittance plot
             self.fig_nyquist1 = plt.figure(figsize=(15, 12), facecolor="white")
 
             if self.immittance == "impedance":
@@ -1694,29 +1889,42 @@ class Multieis:
 
     def plot_bode(
         self,
-        steps: int = 1,  # Spacing bewteen values.
+        steps: int = 1,
         **kwargs,  # Additional arguments passed to plot (i.e file path)
     ):  # The bode plots.
         """
         Creates the Bode plots
-        The Bode plot shows the phase angle of a capacitor's or inductors opptosition to current.
-        A capacitor's opposition to current is -90°, which means that a capacitor's opposition
+        The Bode plot shows the phase angle of a
+        capacitor's or inductors opptosition to current.
+        A capacitor's opposition to current is -90°,
+        which means that a capacitor's opposition
         to current is a negative imaginary quantity.
+
+        :param steps: Spacing between plots. Defaults to 1.
+
+        :keyword fpath: Additional keyword arguments \
+                         passed to plot (i.e file path)
         """
         assert (
             steps <= self.Z_exp.shape[1]
-        ), f"Steps with size {steps} is greater that the number of fitted spectra with size {self.Z_exp.shape[1]}"
+        ), (
+            """Steps with size {} is greater that the
+            number of fitted spectra with size {}"""
+            .format(steps, self.Z_exp.shape[1]))
         self.steps = steps
         self.Z_mag = torch.abs(self.Z_exp)
         self.Z_angle = torch.rad2deg(torch.atan2(self.Z_exp.imag, self.Z_exp.real))
 
         if not hasattr(
             self, "popt"
-        ):  # If the fit method has not been called, only the plots of the experimental data are presented
+        ):  # If the fit method has not been called,
+            # only the plots of the experimental data are presented
 
             indices = [
                 i for i in range(self.Z_exp.shape[1])
-            ]  # Indices should be determined by Z_exp which changes depending on the routine used
+            ]
+            # Indices should be determined by Z_exp
+            # which changes depending on the routine used
             n_cols = 4
             n_rows = 5
 
@@ -1957,11 +2165,19 @@ class Multieis:
 
     def plot_params(
         self,
-        show_errorbar: bool = False,  # If set to True, the errorbars are shown on the parameter plot.
-        **kwargs,  # Additional arguments passed to plot (i.e file path)
-    ) -> None:  # The parameter plots.
+        show_errorbar: bool = False,
+        **kwargs,
+    ) -> None:
         """
         Creates the plot of the optimal parameters as a function of the index
+
+        :param show_errorbar: If set to True, \
+                              the errorbars are shown on the parameter plot.
+
+        :keyword fpath: Additional keyword arguments \
+                         passed to plot (i.e file path)
+
+        :returns: The parameter plots
         """
         self.show_errorbar = show_errorbar
 
@@ -2076,7 +2292,8 @@ class Multieis:
         try:
             if not hasattr(self, "fig_nyquist1"):
                 logging.warning(
-                    "A plot_nyquist method has not been called. Calling method with default args"
+                    """A plot_nyquist method has not been called.
+                    Calling method with default args"""
                 )
                 self.plot_nyquist(
                     steps,
@@ -2106,7 +2323,8 @@ class Multieis:
         try:
             if not hasattr(self, "fig_bode"):
                 logging.warning(
-                    "A plot_bode method has not been called. Calling method with default args"
+                    """A plot_bode method has not been called.
+                    Calling method with default args"""
                 )
                 self.plot_bode(steps, fpath=self.img_path_name + "_bode" + ".png")
             else:
@@ -2131,7 +2349,8 @@ class Multieis:
             try:
                 if not hasattr(self, "fig_params"):
                     logging.warning(
-                        "A plot_params method has not been called. Calling method with default args"
+                        """A plot_params method has not been called.
+                        Calling method with default args"""
                     )
                     self.plot_params(
                         show_errorbar, fpath=self.img_path_name + "_params" + ".png"
