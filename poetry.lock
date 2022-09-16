@@ -678,7 +678,6 @@ numpy = [
     {version = ">=1.18.5", markers = "platform_machine != \"aarch64\" and platform_machine != \"arm64\" and python_version < \"3.10\""},
     {version = ">=1.19.2", markers = "platform_machine == \"aarch64\" and python_version < \"3.10\""},
     {version = ">=1.20.0", markers = "platform_machine == \"arm64\" and python_version < \"3.10\""},
-    {version = ">=1.21.0", markers = "python_version >= \"3.10\""},
 ]
 python-dateutil = ">=2.8.1"
 pytz = ">=2020.1"
@@ -1307,8 +1306,8 @@ docs = []
 
 [metadata]
 lock-version = "1.1"
-python-versions = "^3.9"
-content-hash = "54190569ed45f247d70cac6c9e9c465e91cf2abc4c754f655e00ccda14ea8790"
+python-versions = "~3.9"
+content-hash = "c5734105547306d90707b7b826f339971894ae10d8cc7c7a22d5142a89449f97"
 
 [metadata.files]
 alabaster = []
