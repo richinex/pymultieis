@@ -11,7 +11,7 @@ scipy = "^1.9.1"
 torch = "^1.12.1"
 matplotlib = "3.5"
 numpy = "1.23.1"
-
+torchmin = {git="https://github.com/rfeinman/pytorch-minimize.git"}
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
