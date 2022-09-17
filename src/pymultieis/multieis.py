@@ -564,7 +564,7 @@ class Multieis:
                     ) -> torch.tensor:
         """
         Computes the Akaike Information Criterion according to
-        `M. Ingdal et al`_
+        `M. Ingdal et al <https://www.sciencedirect.com/science/article/abs/pii/S0013468619311739>`_
 
         :param p: A 1D tensor of parameter values
 
@@ -903,8 +903,8 @@ class Multieis:
 
     def fit_stochastic(
         self,
-        lr: float = 1e-3,  # Learning rate
-        num_epochs: int = 1e5,  # Number of epochs
+        lr: float = 1e-3,
+        num_epochs: int = 1e5,
     ) -> Tuple[
         torch.tensor, torch.tensor, torch.tensor, torch.tensor, torch.tensor
     ]:  # Optimal parameters, parameter error,
@@ -1029,14 +1029,20 @@ class Multieis:
 
         return self.popt, self.perr, self.chisqr, self.chitot, self.AIC
 
-    def fit_refine(
-        self, n_iter: int = 5000  # Number of iterations
-    ) -> Tuple[
-        torch.tensor, torch.tensor, torch.tensor, torch.tensor
-    ]:  # Optimal parameters, parameter error,
-        # weighted residual mean square, and the AIC
+    def fit_refine(self,
+                   n_iter: int = 5000
+                   ) -> Tuple[
+        torch.tensor, torch.tensor, torch.tensor, torch.tensor, torch.tensor
+    ]:
         """
         Fitting routine with the smoothing factor set to 1.
+
+        :param n_iter: Number of iterations
+
+        :returns: A tuple containing the optimal parameters (popt), \
+                  the standard error of the parameters (perr), \
+                  the objective function at the minimum (chisqr), \
+                  the total cost function (chitot) and the AIC
         """
 
         if hasattr(self, "popt") and self.popt.shape[1] == self.Z.shape[1]:
@@ -1085,17 +1091,34 @@ class Multieis:
         self.popt = self.convert_to_external(self.par_log).detach()
         self.hess_inv = torch.tensor(optimizer._result.hess_inv.todense())
         self.chitot = optimizer._result.fun
-        self.cov_mat = self.hess_inv * self.chitot
-        perr = torch.zeros(self.num_params, self.num_eis)
-        for i in range(self.num_params):
-            try:
-                perr[i, :] = (torch.sqrt(torch.diag(self.cov_mat)))[
-                    self.kvals[i]:self.kvals[i + 1]
-                ]
-            except ValueError:
-                perr[i, :] = torch.ones(self.num_params)
 
-        self.perr = perr * self.popt
+        # Check if the hess_inv output from the optimizer is identity.
+        # If yes, use the compute_perr function
+        if torch.allclose(
+            self.hess_inv.type(torch.FloatTensor), torch.eye(len(self.par_log))
+        ):
+            self.perr = self.compute_perr(
+                self.popt,
+                self.F,
+                self.Z,
+                self.Zerr_Re,
+                self.Zerr_Im,
+                self.lb_vec,
+                self.ub_vec,
+                self.smf,
+            )
+        else:
+            self.cov_mat = self.hess_inv * self.chitot
+            perr = torch.zeros(self.num_params, self.num_eis)
+            for i in range(self.num_params):
+                try:
+                    perr[i, :] = (torch.sqrt(torch.diag(self.cov_mat)))[
+                        self.kvals[i]:self.kvals[i + 1]
+                    ]
+                except ValueError:
+                    perr[i, :] = torch.ones(self.num_params)
+
+            self.perr = perr * self.popt
         self.chisqr = (
             torch.mean(
                 _vmap(self.wrms_func, in_dims=(1, None, 1, 1, 1))(
@@ -1125,7 +1148,7 @@ class Multieis:
             int
         ] = None,
     ) -> Tuple[
-        torch.tensor, torch.tensor, torch.tensor, torch.tensor
+        torch.tensor, torch.tensor, torch.tensor, torch.tensor, torch.tensor
     ]:
         """
         Fits each spectra individually using the L-M least squares method
@@ -1133,8 +1156,10 @@ class Multieis:
         :params indices: List containing the indices of spectra to plot. \
                          If set to None, all spectra are fitted sequentially
 
-        :returns: The optimal parameters, parameter error, \
-                  weighted residual mean square, and the AIC
+        :returns: A tuple containing the optimal parameters (popt), \
+                  the standard error of the parameters (perr), \
+                  the objective function at the minimum (chisqr), \
+                  the total cost function (chitot) and the AIC
         """
 
         if indices:
@@ -1369,14 +1394,14 @@ class Multieis:
         return self.perr
 
     def do_minimize(self,
-                    p,
-                    f,
-                    z,
-                    zerr_re,
-                    zerr_im,
-                    lb,
-                    ub,
-                    smf
+                    p: torch.tensor,
+                    f: torch.tensor,
+                    z: torch.tensor,
+                    zerr_re: torch.tensor,
+                    zerr_im: torch.tensor,
+                    lb: torch.tensor,
+                    ub: torch.tensor,
+                    smf: torch.tensor
                     ):
         """
 
@@ -1413,13 +1438,13 @@ class Multieis:
         return res
 
     def jac_fun(self,
-                p,
-                f,
-                z,
-                zerr_re,
-                zerr_im,
-                lb,
-                ub,
+                p: torch.tensor,
+                f: torch.tensor,
+                z: torch.tensor,
+                zerr_re: torch.tensor,
+                zerr_im: torch.tensor,
+                lb: torch.tensor,
+                ub: torch.tensor,
                 ) -> torch.tensor:
         """
         Computes the Jacobian of the least squares \
@@ -1449,16 +1474,15 @@ class Multieis:
             self.wrss_func_ls, (p, f, z, zerr_re, zerr_im, lb, ub)
         )[0]
 
-    def do_minimize_ls(
-        self,
-        p: torch.tensor,
-        f: torch.tensor,
-        z: torch.tensor,
-        zerr_re: torch.tensor,
-        zerr_im: torch.tensor,
-        lb: torch.tensor,
-        ub: torch.tensor,
-    ) -> Tuple[
+    def do_minimize_ls(self,
+                       p: torch.tensor,
+                       f: torch.tensor,
+                       z: torch.tensor,
+                       zerr_re: torch.tensor,
+                       zerr_im: torch.tensor,
+                       lb: torch.tensor,
+                       ub: torch.tensor,
+                       ) -> Tuple[
         torch.tensor, torch.tensor
     ]:  #
         """
@@ -1490,12 +1514,11 @@ class Multieis:
         )
         return res.x, res.fun
 
-    def encode(
-        self,
-        p: torch.tensor,
-        lb: torch.tensor,
-        ub: torch.tensor,
-    ) -> torch.tensor:
+    def encode(self,
+               p: torch.tensor,
+               lb: torch.tensor,
+               ub: torch.tensor,
+               ) -> torch.tensor:
         """
         Converts external parameters to internal parameters
 
@@ -1513,9 +1536,11 @@ class Multieis:
         p = torch.log10((p - lb) / (1 - p / ub))
         return p
 
-    def decode(
-        self, p: torch.tensor, lb: torch.tensor, ub: torch.tensor
-    ) -> torch.tensor:
+    def decode(self,
+               p: torch.tensor,
+               lb: torch.tensor,
+               ub: torch.tensor
+               ) -> torch.tensor:
         """
         Converts internal parameters to external parameters
 
@@ -1557,9 +1582,20 @@ class Multieis:
 
         return torch.cat((z.real, z.imag), dim=0)
 
-    def model_prediction(
-        self, P: torch.tensor, F: torch.tensor
-    ) -> Tuple[torch.tensor, torch.tensor]:
+    def model_prediction(self,
+                         P: torch.tensor,
+                         F: torch.tensor
+                         ) -> Tuple[torch.tensor, torch.tensor]:
+        """
+        Computes the predicted immittance and its inverse
+
+        :param P:
+
+        :param Z:
+
+        :returns: The predicted immittance (Z_pred) \
+                  and its inverse(Y_pred)
+        """
         Z_pred = _vmap(self.real_to_complex, in_dims=0)(
             _vmap(self.func, in_dims=(1, None))(P, F)
         ).T
@@ -1582,11 +1618,10 @@ class Multieis:
             else:
                 raise
 
-    def plot_nyquist(
-        self,
-        steps: int = 1,  # Spacing bewteen values.
-        **kwargs,  # Additional arguments passed to plot (i.e file path)
-    ):  # The complex plane plots.
+    def plot_nyquist(self,
+                     steps: int = 1,
+                     **kwargs,
+                     ):
         """
         Creates the complex plane plots (aka Nyquist plots)
 
@@ -1597,6 +1632,8 @@ class Multieis:
 
         :keyword fpath2: Additional keyword arguments \
                     passed to plot (i.e file path)
+
+        :returns: The complex plane plots.
 
         """
 
@@ -1887,11 +1924,10 @@ class Multieis:
             else:
                 plt.show()
 
-    def plot_bode(
-        self,
-        steps: int = 1,
-        **kwargs,  # Additional arguments passed to plot (i.e file path)
-    ):  # The bode plots.
+    def plot_bode(self,
+                  steps: int = 1,
+                  **kwargs,
+                  ):
         """
         Creates the Bode plots
         The Bode plot shows the phase angle of a
@@ -1904,6 +1940,8 @@ class Multieis:
 
         :keyword fpath: Additional keyword arguments \
                          passed to plot (i.e file path)
+
+        :returns: The bode plots.
         """
         assert (
             steps <= self.Z_exp.shape[1]
@@ -2163,11 +2201,10 @@ class Multieis:
             else:
                 plt.show()
 
-    def plot_params(
-        self,
-        show_errorbar: bool = False,
-        **kwargs,
-    ) -> None:
+    def plot_params(self,
+                    show_errorbar: bool = False,
+                    **kwargs,
+                    ) -> None:
         """
         Creates the plot of the optimal parameters as a function of the index
 
@@ -2231,7 +2268,10 @@ class Multieis:
             else:
                 plt.show()
 
-    def get_img_path(self, fname: str = None):
+    def get_img_path(self,
+                     fname:
+                     str = None
+                     ):
         """
         Creates a path name for saving images
         """
