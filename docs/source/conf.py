@@ -36,9 +36,11 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
     'sphinx.ext.githubpages',
-    'nbsphinx'
+    'nbsphinx',
+    'sphinxemoji.sphinxemoji',
 ]
 
+sphinxemoji_style = 'twemoji'
 
 templates_path = ['_templates']
 

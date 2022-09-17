@@ -11,6 +11,7 @@ scipy = "^1.9.1"
 torch = "^1.12.1"
 matplotlib = "3.5"
 numpy = "1.23.1"
+sphinxemoji = "^0.2.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

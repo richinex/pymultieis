@@ -237,6 +237,6 @@ If no fname is provided, a default name 'fit' is used. See an example of saving 
 
 
 .. important::
-  🎉 Voila! That's it 🎉
+  :thumbsup: Voila! That's it
 
 
