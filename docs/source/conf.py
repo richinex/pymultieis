@@ -11,7 +11,7 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../../src'))
+sys.path.insert(0, os.path.abspath('../../src/'))
 
 
 # -- Project information -----------------------------------------------------
@@ -41,7 +41,9 @@ extensions = [
 
 
 templates_path = ['_templates']
+
 source_suffix = ['.rst', '.md']
+
 master_doc = 'index'
 # exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', '**.ipynb_checkpoints']
 exclude_patterns = ['_build', '**.ipynb_checkpoints']

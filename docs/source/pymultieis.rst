@@ -6,8 +6,6 @@ pymultieis.multieis module
 
 .. automodule:: pymultieis.multieis
    :members:
-   :undoc-members:
-   :show-inheritance:
 
 
 .. autofunction:: pymultieis.multieis.Multieis.compute_aic
