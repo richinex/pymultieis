@@ -12,7 +12,6 @@ torch = "^1.12.1"
 matplotlib = "3.5"
 numpy = "1.23.1"
 
-
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
 Sphinx = "^5.1.1"
@@ -28,5 +27,5 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.extras]
-docs = ["Sphinx", "sphinx-rtd-theme", "sphinxcontrib-napoleon"]
+docs = ["Sphinx", "sphinx-rtd-theme", "sphinxcontrib-napoleon", "toml"]
 
