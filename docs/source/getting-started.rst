@@ -235,8 +235,8 @@ If no fname is provided, a default name 'fit' is used. See an example of saving 
      If a value to :code:`fname` is specified by the user, it must be used as a keyword argument and must also be a valid string
 
 
-
 .. important::
-  :thumbsup: Voila! That's it
+
+  |:thumbsup:| Voila! That's it |:thumbsup:|
 
 
