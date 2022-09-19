@@ -30,7 +30,7 @@ Installation
 
    pip install pymultieis
 
-:ref:`my-reference-label` contains a step-by-step tutorial
+:ref:`getting-started-label` contains a step-by-step tutorial
 on getting started with :code:`pymultieis`.
 
 Dependencies
@@ -53,7 +53,7 @@ Opening these will require Jupyter notebook or Jupyter lab.
 Examples and Documentation
 ---------------------------
 
-:ref:`my-reference-label` contains a detailed guide on getting started with :code:`pymultieis`.
+:ref:`getting-started-label` contains a detailed guide on getting started with :code:`pymultieis`.
 It is assumed that the user is already familiar with basic python syntax.
 Detailed tutorials on several aspects of :code:`pymultieis` can be found in the :code:`examples/` directory.
 The documentation can be found at
@@ -66,8 +66,10 @@ The documentation can be found at
    pymultieis
    examples
    batch-fit-vs-sequential-fit
+   smoothing-factor-effect
    how-it-works
    troubleshooting
+   extra-resources
 
 
 

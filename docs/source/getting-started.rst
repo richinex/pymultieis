@@ -1,4 +1,4 @@
-.. _my-reference-label:
+.. _getting-started-label:
 
 =========================================
 Getting started with :code:`pymultieis`
@@ -14,7 +14,8 @@ The following steps are good starting points towards analyzing your own data usi
 
 
 .. hint::
-  Please feel free to open an issue if you encounter any difficulties or bugs.
+
+  Please do not hesistate to `open an issue <https://github.com/richinex/pymultieis/issues>`_ if you encounter any difficulties or notice any bugs.
 
 Step 1: Installation
 ====================
@@ -78,7 +79,8 @@ We assume that we have our files in the data folder one step above working direc
 
 .. important::
   :code:`pymultieis` does not offer a preprocessing module since other packages offer this feature.
-  For instance files from different vendors (ZPlot, Gamry, Parstat, Autolab) can be read using the `preprocessing module` offered by `impedancepy <https://impedancepy.readthedocs.io/en/latest/preprocessing.html>`_
+  For instance files from different vendors (ZPlot, Gamry, Parstat, Autolab) can be read using the
+  `preprocessing module` offered by `impedancepy <https://impedancepy.readthedocs.io/en/latest/preprocessing.html>`_
 
 Step 3: Define your impedance/admittance model
 ===================================================
@@ -96,8 +98,8 @@ For instance we shall convert modified *Randles* circuit shown below to a python
 
 
   def redox(p, f):
-      w = 2*torch.pi*f      # Angular frequency
-      s = 1j*w            # Complex variable
+      w = 2*torch.pi*f                # Angular frequency
+      s = 1j*w                        # Complex variable
       Rs = p[0]
       Qh = p[1]
       nh = p[2]
@@ -105,7 +107,7 @@ For instance we shall convert modified *Randles* circuit shown below to a python
       Wct = p[4]
       Rw = p[5]
       Zw = Wct/torch.sqrt(w) * (1-1j) # Planar infinite length Warburg impedance
-      Ydl = (s**nh)*Qh       # admittance of a CPE
+      Ydl = (s**nh)*Qh                # admittance of a CPE
       Z1 = (1/Zw + 1/Rw)**-1
       Z2 = (Rct+Z1)
       Y2 = Z2**-1
@@ -129,6 +131,11 @@ Next, we define an initial guess, bounds and smoothing factor for each of the pa
   bounds = [[1e-15,1e15], [1e-8, 1e2], [1e-1,1e0], [1e-15,1e15], [1e-15,1e15], [1e-15,1e15]]
 
   smf = torch.tensor([100000.0, 100000.0, 100000.0, 100000.0, 100000.0, 100000.0])
+
+.. note::
+
+   The values of the smoothing factor ``smf`` are not fixed. They could vary depending on the
+   data and weighting used. Check out :ref:`smoothing-factor-effect-label` for an example of this.
 
 
 Step 4: Create an instance of the fitting class
@@ -219,8 +226,9 @@ The :code:`save_plot_params()` can only be called after a fit is performed.
 
 
 .. note::
-   if the plotting methods are not called before saving methods,
-   default arguments are used to automatically generate the plots..
+
+   If the plotting methods are not called before saving methods,
+   default arguments are used to automatically generate the plots.
 
 The is also a :code:`save_results()` method which saves the optimal paramaters popt, the standard error of the parameters perr,
 the predicted spectra Z_pred and the metrics associated with the fit.  The save methods have an fname parameter which takes as
@@ -232,6 +240,7 @@ If no fname is provided, a default name 'fit' is used. See an example of saving 
   eis_redox.save_results(fname='redox')
 
 .. warning::
+
      If a value to :code:`fname` is specified by the user, it must be used as a keyword argument and must also be a valid string
 
 

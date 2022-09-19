@@ -1,3 +1,5 @@
+.. _examples-label:
+
 Examples
 ========
 
@@ -7,8 +9,8 @@ Examples
     :glob:
 
     examples/getting-started.ipynb
+    examples/batch-fit-vs-sequential-fit.ipynb
     examples/intercalation.ipynb
-    examples/redox_exp.ipynb
-    examples/redox_sim.ipynb
-    
+    examples/smoothing-factor-effect.ipynb
+
 
