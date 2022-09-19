@@ -80,10 +80,10 @@ class Multieis:
         # Create the lower and upper bounds
         try:
             self.lb = self.check_zero_and_negative_values(
-                torch.tensor([i[0] for i in bounds])
+                torch.as_tensor([i[0] for i in bounds])
             )
             self.ub = self.check_zero_and_negative_values(
-                torch.tensor([i[1] for i in bounds])
+                torch.as_tensor([i[1] for i in bounds])
             )
         except IndexError:
             print("Bounds must be a sequence of min-max pairs")
@@ -194,7 +194,7 @@ class Multieis:
             self.Zerr_Im = torch.ones(self.num_freq, self.num_eis)
         else:
             raise AttributeError(
-                ("weight must be one of 'None', "
+                ("weight must be one of None, "
                  "proportional', 'modulus' or an 2-D tensor of weights")
             )
 
@@ -218,9 +218,10 @@ class Multieis:
         else:
             return arr.type(torch.complex64)
 
-    def get_bounds_vector(
-        self, lb: torch.tensor, ub: torch.tensor
-    ) -> Tuple[torch.tensor, torch.tensor]:
+    def get_bounds_vector(self,
+                          lb: torch.tensor,
+                          ub: torch.tensor
+                          ) -> Tuple[torch.tensor, torch.tensor]:
         """
         Creates vectors for the upper and lower \
         bounds which are the same length \
@@ -271,7 +272,9 @@ class Multieis:
         self.d2m[-1, -4:] = [-1, 4, -5, 2]
         return torch.tensor(self.d2m).type(torch.FloatTensor)
 
-    def convert_to_internal(self, p: torch.tensor) -> torch.tensor:
+    def convert_to_internal(self,
+                            p: torch.tensor
+                            ) -> torch.tensor:
         """
         Converts A tensor of parameters from an external \
         to an internal coordinates (log10 scale)
@@ -337,7 +340,7 @@ class Multieis:
 
         :param f: A 1D tensor of frequency
 
-        :param z: A 1D tensor of complex immittance
+        :param z: A 1D tensor of complex immittances
 
         :param zerr_re: A 1D tensor of weights for \
                         the real part of the immittance
@@ -372,7 +375,7 @@ class Multieis:
 
         :param f: A 1D tensor of frequency
 
-        :param z: A 1D tensor of complex immittance
+        :param z: A 1D tensor of complex immittances
 
         :param zerr_re: A 1D tensor of weights for \
                         the real part of the immittance
@@ -448,7 +451,7 @@ class Multieis:
 
         :param F: A 1D tensor of frequency
 
-        :param Z: A 2D tensor of complex immittance
+        :param Z: A 2D tensor of complex immittances
 
         :param Zerr_Re: A 2D tensor of weights for \
                         the real part of the immittance
@@ -463,7 +466,7 @@ class Multieis:
                    the upper bounds (for the total parameters)
 
         :param smf: A tensor of real elements same size as p0. \
-            when set to inf, the corresponding parameter is kept constant
+                    when set to inf, the corresponding parameter is kept constant
 
         :returns: A 2D tensor of the standard error on the parameters
 
@@ -513,7 +516,7 @@ class Multieis:
 
         :param F: A 1D tensor of frequency
 
-        :param Z: A 2D tensor of complex immittance
+        :param Z: A 2D tensor of complex immittances
 
         :param Zerr_Re: A 2D tensor of weights for \
                         the real part of the immittance
@@ -570,7 +573,7 @@ class Multieis:
 
         :param f: A 1D tensor of frequency
 
-        :param z: A 1D tensor of complex immittance
+        :param z: A 1D tensor of complex immittances
 
         :param zerr_re: A 1D tensor of weights for \
                         the real part of the immittance
@@ -617,9 +620,9 @@ class Multieis:
             aic = m2lnL + 2 * (self.num_params + 1)
         return aic
 
-    def fit_deterministic(
-        self, n_iter: int = 5000
-    ) -> Tuple[
+    def fit_deterministic(self,
+                          n_iter: int = 5000
+                          ) -> Tuple[
         torch.tensor, torch.tensor, torch.tensor, torch.tensor, torch.tensor
     ]:
 
@@ -718,6 +721,8 @@ class Multieis:
         if torch.allclose(
             self.hess_inv.type(torch.FloatTensor), torch.eye(len(self.par_log))
         ):
+            print("""Computing standard error of parameters
+                     via the compute_perr method""")
             self.perr = self.compute_perr(
                 self.popt,
                 self.F,
@@ -763,15 +768,17 @@ class Multieis:
         self.indices = [i for i in range(self.Z_exp.shape[1])]
         return self.popt, self.perr, self.chisqr, self.chitot, self.AIC
 
-    def fit_deterministic2(
-        self, n_iter: int = 5000  # Number of iterations
-    ) -> Tuple[
+    def fit_deterministic2(self,
+                           n_iter: int = 5000
+                           ) -> Tuple[
         torch.tensor, torch.tensor, torch.tensor, torch.tensor, torch.tensor
     ]:  # Optimal parameters, parameter error,
         # weighted residual mean square, and the AIC
 
         """
         Fitting routine best used when the weighting is the standard deviation.
+
+        :params n_iter: Number of iterations
 
         :returns: A tuple containing the optimal parameters (popt), \
                   the standard error of the parameters (perr), \
@@ -860,6 +867,8 @@ class Multieis:
         if torch.allclose(
             self.hess_inv.type(torch.FloatTensor), torch.eye(len(self.par_log))
         ):
+            print("""Computing standard error of parameters
+                     via the compute_perr method""")
             self.perr = self.compute_perr(
                 self.popt,
                 self.F,
@@ -901,11 +910,10 @@ class Multieis:
         self.indices = [i for i in range(self.Z_exp.shape[1])]
         return self.popt, self.perr, self.chisqr, self.chitot, self.AIC
 
-    def fit_stochastic(
-        self,
-        lr: float = 1e-3,
-        num_epochs: int = 1e5,
-    ) -> Tuple[
+    def fit_stochastic(self,
+                       lr: float = 1e-3,
+                       num_epochs: int = 1e5,
+                       ) -> Tuple[
         torch.tensor, torch.tensor, torch.tensor, torch.tensor, torch.tensor
     ]:  # Optimal parameters, parameter error,
         # weighted residual mean square, and the AIC
@@ -986,7 +994,8 @@ class Multieis:
         if torch.allclose(
             self.hess_inv.type(torch.FloatTensor), torch.eye(len(self.par_log))
         ):
-            print("\nhessian inv is identity")
+            print("""Computing standard error of parameters
+                   via the compute_perr method""")
             self.perr = self.compute_perr(
                 self.popt,
                 self.F,
@@ -1097,6 +1106,8 @@ class Multieis:
         if torch.allclose(
             self.hess_inv.type(torch.FloatTensor), torch.eye(len(self.par_log))
         ):
+            print("""Computing standard error of parameters
+                     via the compute_perr method""")
             self.perr = self.compute_perr(
                 self.popt,
                 self.F,
@@ -1142,12 +1153,11 @@ class Multieis:
         self.indices = [i for i in range(self.Z_exp.shape[1])]
         return self.popt, self.perr, self.chisqr, self.chitot, self.AIC
 
-    def fit_sequential(
-        self,
-        indices: Sequence[
-            int
-        ] = None,
-    ) -> Tuple[
+    def fit_sequential(self,
+                       indices: Sequence[
+                        int
+                        ] = None,
+                       ) -> Tuple[
         torch.tensor, torch.tensor, torch.tensor, torch.tensor, torch.tensor
     ]:
         """
@@ -1288,9 +1298,9 @@ class Multieis:
         print(f"total time is {end-start}", end=" ")
         return self.popt, self.perr, self.chisqr, self.chitot, self.AIC
 
-    def compute_perr_mc(
-        self, n_boots: int = 500  # Number of bootstrap samples
-    ) -> torch.tensor:
+    def compute_perr_mc(self,
+                        n_boots: int = 500
+                        ) -> torch.tensor:
 
         """
         The bootstrap approach used here is \
@@ -1301,6 +1311,8 @@ class Multieis:
         is implicit in this method. We also assume that \
         the errors are identically distributed with constant variance.
         (Bootstrapping Regression Models - J Fox)
+
+        :param n_boots: Number of bootstrap samples
 
         :returns: A 2-D tensor containing the \
                   estimated parameter standard deviation
@@ -1412,7 +1424,7 @@ class Multieis:
 
         :param f: A 1D tensor of frequency
 
-        :param z: A 1D tensor of complex immittance
+        :param z: A 1D tensor of complex immittances
 
         :param zerr_re: A 1D tensor of weights for \
                         the real part of the immittance
@@ -1589,9 +1601,9 @@ class Multieis:
         """
         Computes the predicted immittance and its inverse
 
-        :param P:
+        :param P: A 2D tensor of optimal parameters
 
-        :param Z:
+        :param Z: A 1D tensor of complex immittances
 
         :returns: The predicted immittance (Z_pred) \
                   and its inverse(Y_pred)
@@ -1602,9 +1614,13 @@ class Multieis:
         Y_pred = 1 / Z_pred.clone()
         return Z_pred, Y_pred
 
-    def create_dir(self, dir_name: str):
+    def create_dir(self,
+                   dir_name: str
+                   ):
         """
         Creates a directory. equivalent to using mkdir -p on the command line
+
+        :param dir_name: Name assigned to the directory
         """
         self.dir_name = dir_name
         from errno import EEXIST
