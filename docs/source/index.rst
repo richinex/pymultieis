@@ -18,7 +18,7 @@ The batch-fitting algorithm implemented in pymultieis allows the kinetic paramet
 such as the charge transfer resistance, double layer capacitance and Warburg coefficient to be obtained
 as curves which vary as a function of the dependent variable under study.
 
-The multieis in :code:`pymultieis` is an represents for :code:`Multiple Electrochemical Impedance Spectra`
+The ``py`` in ``pymultieis`` represents python while the ``multieis`` is an abbreviation for ``Multiple Electrochemical Impedance Spectra``.
 
 :code:`pymultieis` offers methods modules for model fiting, model validation, visualization,
 

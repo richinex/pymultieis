@@ -56,7 +56,7 @@ class Multieis:
         self,
         p0: torch.tensor,
         freq: torch.tensor,
-        Z: torch.torch.tensor,
+        Z: torch.tensor,
         bounds: Sequence[Union[int, float]],
         smf: torch.tensor,
         func: Callable[[float, float], float],
@@ -737,7 +737,7 @@ class Multieis:
                         self.kvals[i]:self.kvals[i + 1]
                     ]
                 except ValueError:
-                    perr[i, :] = torch.ones(self.num_params)
+                    perr[i, :] = torch.ones(self.num_eis)
 
             self.perr = perr * self.popt
         self.chisqr = (
@@ -879,7 +879,7 @@ class Multieis:
                         self.kvals[i]:self.kvals[i + 1]
                     ]
                 except ValueError:
-                    perr[i, :] = torch.ones(self.num_params)
+                    perr[i, :] = torch.ones(self.num_eis)
 
             self.perr = perr * self.popt
         self.chisqr = torch.mean(
@@ -925,7 +925,7 @@ class Multieis:
                   the objective function at the minimum (chisqr), \
                   the total cost function (chitot) and the AIC
         """
-        self.learning_rate = lr
+        self.lr = lr
         self.num_epochs = int(num_epochs)
 
         if hasattr(self, "popt") and self.popt.shape[1] == self.Z.shape[1]:
@@ -939,7 +939,7 @@ class Multieis:
             ).requires_grad_(True)
 
         start = datetime.now()
-        optimizer = torch.optim.Adam(params=[self.par_log], lr=lr)
+        optimizer = torch.optim.Adam(params=[self.par_log], lr=self.lr)
         self.losses = []
         for epoch in range(self.num_epochs):
 
@@ -1006,7 +1006,7 @@ class Multieis:
                         self.kvals[i]:self.kvals[i + 1]
                     ]
                 except ValueError:
-                    perr[i, :] = torch.ones(self.num_params)
+                    perr[i, :] = torch.ones(self.num_eis)
 
             self.perr = perr * self.popt
         self.chisqr = torch.mean(
@@ -1116,7 +1116,7 @@ class Multieis:
                         self.kvals[i]:self.kvals[i + 1]
                     ]
                 except ValueError:
-                    perr[i, :] = torch.ones(self.num_params)
+                    perr[i, :] = torch.ones(self.num_eis)
 
             self.perr = perr * self.popt
         self.chisqr = (
