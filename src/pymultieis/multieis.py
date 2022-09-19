@@ -751,14 +751,14 @@ class Multieis:
                     self.popt, self.F, self.Z, self.Zerr_Re, self.Zerr_Im
                 )
             )
-        ).numpy()
+        )
         self.AIC = (
             torch.mean(
                 _vmap(self.compute_aic, in_dims=(1, None, 1, 1, 1))(
                     self.popt, self.F, self.Z, self.Zerr_Re, self.Zerr_Im
                 )
             )
-        ).numpy()
+        )
         print("\nOptimization complete")
         end = datetime.now()
         print(f"total time is {end-start}", end=" ")
@@ -1136,14 +1136,14 @@ class Multieis:
                     self.popt, self.F, self.Z, self.Zerr_Re, self.Zerr_Im
                 )
             )
-        ).numpy()
+        )
         self.AIC = (
             torch.mean(
                 _vmap(self.compute_aic, in_dims=(1, None, 1, 1, 1))(
                     self.popt, self.F, self.Z, self.Zerr_Re, self.Zerr_Im
                 )
             )
-        ).numpy()
+        )
         print("\nOptimization complete")
         end = datetime.now()
         print(f"total time is {end-start}", end=" ")
@@ -1289,7 +1289,7 @@ class Multieis:
         self.perr = perr.clone()
         self.chisqr = torch.mean(chisqr)
         self.chitot = self.chisqr.clone()
-        self.AIC = torch.mean(aic).numpy()
+        self.AIC = torch.mean(aic)
         self.Z_exp = self.Z[:, self.indices]
         self.Y_exp = 1 / self.Z_exp.clone()
         self.Z_pred, self.Y_pred = self.model_prediction(self.popt, self.F)
@@ -2219,6 +2219,7 @@ class Multieis:
 
     def plot_params(self,
                     show_errorbar: bool = False,
+                    labels: Sequence[str] = None,
                     **kwargs,
                     ) -> None:
         """
@@ -2227,17 +2228,35 @@ class Multieis:
         :param show_errorbar: If set to True, \
                               the errorbars are shown on the parameter plot.
 
+        :param labels: A list or tuple containing the circuit elements\
+                       e.g ['Rs', 'Cdl']
+
         :keyword fpath: Additional keyword arguments \
                          passed to plot (i.e file path)
 
         :returns: The parameter plots
         """
+        if labels is None:
+            self.labels = [str(i) for i in range(self.num_params)]
+        else:
+            assert (len(labels) == self.num_params), (
+                """Ths size of the labels is {}
+                while the size of the parameters is {}"""
+                .format(
+                    len(labels), self.num_params
+                    )
+                )
+            assert (all(isinstance(item, str) for item in labels)), (
+                """Some items in labels are not valid strings"""
+                )
+            self.labels = labels
+
         self.show_errorbar = show_errorbar
 
         if not hasattr(self, "popt"):
             raise AttributeError("A fit() method has not been called.")
         else:
-            self.labels = [str(i) for i in range(self.num_params)]
+
             self.param_idx = [str(i) for i in self.indices]
             params_df = pd.DataFrame(self.popt.T.numpy(), columns=self.labels)
             params_df["Idx"] = self.param_idx
@@ -2402,6 +2421,7 @@ class Multieis:
 
     def save_plot_params(self,
                          show_errorbar: bool = False,
+                         labels: Sequence[str] = None,
                          *,
                          fname: str = None,
                          ) -> None:
@@ -2412,10 +2432,27 @@ class Multieis:
         :param show_errorbar: If set to True, \
                               the errorbars are shown on the parameter plot.
 
+        :param labels: A list or tuple containing the circuit elements\
+                       e.g ['Rs', 'Cdl']
+
         :keyword fname: Name assigned to the directory, generated plots and data
 
         :returns: A .png image of the the parameter plot
         """
+        if labels is None:
+            self.labels = [str(i) for i in range(self.num_params)]
+        else:
+            assert (len(labels) == self.num_params), (
+                """Ths size of the labels is {}
+                while the size of the parameters is {}"""
+                .format(
+                    len(labels), self.num_params
+                    )
+                )
+            assert (all(isinstance(item, str) for item in labels)), (
+                """Some items in labels are not valid strings"""
+                )
+
         if not hasattr(self, "popt"):
             raise AttributeError("A fit() method has not been called.")
         else:
