@@ -2310,7 +2310,9 @@ class Multieis:
 
         return path_name
 
-    def get_results_path(self, fname: str = None):
+    def get_results_path(self,
+                         fname: str = None
+                         ):
         """
         Creates a path name for saving the results
         """
@@ -2333,15 +2335,20 @@ class Multieis:
 
         return path_name
 
-    def save_plot_nyquist(
-        self,
-        steps: int = 1,
-        *,
-        fname: str = None,  # Name assigned to the directory, generated plots and data.
-    ) -> None:  # The complex plane, bode and the parameter plots.
+    def save_plot_nyquist(self,
+                          steps: int = 1,
+                          *,
+                          fname: str = None,
+                          ) -> None:
         """
         Saves the Nyquist plots in the current working directory
-        with the fname provided
+        with the fname provided.
+
+        :param steps: Spacing between plots. Defaults to 1.
+
+        :keyword fname: Name assigned to the directory, generated plots and data
+
+        :returns: A .png image of the the complex plane plots
         """
 
         self.img_path_name = self.get_img_path(fname)
@@ -2365,15 +2372,20 @@ class Multieis:
         except AttributeError as e:
             logging.exception("", e, exc_info=True)
 
-    def save_plot_bode(
-        self,
-        steps: int = 1,
-        *,
-        fname: str = None,  # Name assigned to the directory, generated plots and data.
-    ) -> None:  # The complex plane, bode and the parameter plots.
+    def save_plot_bode(self,
+                       steps: int = 1,
+                       *,
+                       fname: str = None,
+                       ) -> None:
         """
         Saves the Bode plots in the current working directory
         with the fname provided
+
+        :param steps: Spacing between plots. Defaults to 1.
+
+        :keyword fname: Name assigned to the directory, generated plots and data
+
+        :returns: A .png image of the the bode plot
         """
         self.img_path_name = self.get_img_path(fname)
         try:
@@ -2388,15 +2400,21 @@ class Multieis:
         except AttributeError as e:
             logging.exception("", e, exc_info=True)
 
-    def save_plot_params(
-        self,
-        show_errorbar: bool = False,
-        *,
-        fname: str = None,  # Name assigned to the directory, generated plots and data.
-    ) -> None:  # The complex plane, bode and the parameter plots.
+    def save_plot_params(self,
+                         show_errorbar: bool = False,
+                         *,
+                         fname: str = None,
+                         ) -> None:
         """
         Saves the parameter plots in the current working directory
-        with the fname provided
+        with the fname provided.
+
+        :param show_errorbar: If set to True, \
+                              the errorbars are shown on the parameter plot.
+
+        :keyword fname: Name assigned to the directory, generated plots and data
+
+        :returns: A .png image of the the parameter plot
         """
         if not hasattr(self, "popt"):
             raise AttributeError("A fit() method has not been called.")
@@ -2418,14 +2436,17 @@ class Multieis:
             except AttributeError as e:
                 logging.exception("", e, exc_info=True)
 
-    def save_results(
-        self,
-        *,
-        fname: str = None,  # Name assigned to the directory, generated plots and data.
-    ):  # The complex plane, bode and the parameter plots.
+    def save_results(self,
+                     *,
+                     fname: str = None,
+                     ):  # The complex plane, bode and the parameter plots.
         """
         Saves the results (popt, perr, and Z_pred) in the current working directory
         with the fname provided
+
+        :keyword fname: Name assigned to the directory, generated plots and data
+
+        :returns: A .png image of the the complex plane plots
         """
         if not hasattr(self, "popt"):
             raise AttributeError("A fit() method has not been called.")
