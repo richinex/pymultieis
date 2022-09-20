@@ -2269,9 +2269,6 @@ class Multieis:
                     len(labels.items()), self.num_params
                     )
                 )
-            assert (isinstance(labels, collections.Mapping)), (
-                """labels is not a valid dictionary"""
-                )
 
             self.labels = {
                 self.try_convert(k): self.try_convert(v) for k, v in labels.items()
@@ -2411,22 +2408,12 @@ class Multieis:
 
         self.img_path_name = self.get_img_path(fname)
         try:
-            if not hasattr(self, "fig_nyquist1"):
-                logging.warning(
-                    """A plot_nyquist method has not been called.
-                    Calling method with default args"""
-                )
-                self.plot_nyquist(
-                    steps,
-                    fpath1=self.img_path_name + "_" + self.plot_title1.lower() + ".png",
-                    fpath2=self.img_path_name + "_" + self.plot_title2.lower() + ".png",
-                )
-            else:
-                self.plot_nyquist(
-                    self.steps,
-                    fpath1=self.img_path_name + "_" + self.plot_title1.lower() + ".png",
-                    fpath2=self.img_path_name + "_" + self.plot_title2.lower() + ".png",
-                )
+            self.plot_nyquist(
+                steps,
+                fpath1=self.img_path_name + "_" + self.plot_title1.lower() + ".png",
+                fpath2=self.img_path_name + "_" + self.plot_title2.lower() + ".png",
+            )
+
         except AttributeError as e:
             logging.exception("", e, exc_info=True)
 
@@ -2447,14 +2434,8 @@ class Multieis:
         """
         self.img_path_name = self.get_img_path(fname)
         try:
-            if not hasattr(self, "fig_bode"):
-                logging.warning(
-                    """A plot_bode method has not been called.
-                    Calling method with default args"""
-                )
-                self.plot_bode(steps, fpath=self.img_path_name + "_bode" + ".png")
-            else:
-                self.plot_bode(self.steps, fpath=self.img_path_name + "_bode" + ".png")
+            self.plot_bode(steps, fpath=self.img_path_name + "_bode" + ".png")
+
         except AttributeError as e:
             logging.exception("", e, exc_info=True)
 
@@ -2511,22 +2492,12 @@ class Multieis:
         else:
             self.img_path_name = self.get_img_path(fname)
             try:
-                if not hasattr(self, "fig_params"):
-                    logging.warning(
-                        """A plot_params method has not been called.
-                        Calling method with default args"""
-                    )
-                    self.plot_params(
-                        show_errorbar=True,
-                        labels=self.labels,
-                        fpath=self.img_path_name + "_params" + ".png"
-                    )
-                else:
-                    self.plot_params(
-                        show_errorbar=self.show_errorbar,
-                        labels=self.labels,
-                        fpath=self.img_path_name + "_params" + ".png"
-                    )
+                self.plot_params(
+                    show_errorbar=True,
+                    labels=self.labels,
+                    fpath=self.img_path_name + "_params" + ".png"
+                )
+
             except AttributeError as e:
                 logging.exception("", e, exc_info=True)
 
