@@ -1,4 +1,4 @@
-.. _smoothing-factor-effect-label:
+.. _FAQ-label:
 
 ===================================================
 Effect of varying the smoothing factor on the fit

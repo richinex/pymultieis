@@ -66,10 +66,10 @@ The documentation can be found at
    pymultieis
    examples
    batch-fit-vs-sequential-fit
-   smoothing-factor-effect
    how-it-works
    troubleshooting
    extra-resources
+   FAQ
 
 
 
