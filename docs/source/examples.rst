@@ -9,7 +9,7 @@ Examples
     :glob:
 
     examples/getting-started.ipynb
-    examples/batch-fit-vs-sequential-fit.ipynb
+    examples/sequential-fit.ipynb
     examples/intercalation.ipynb
     examples/smoothing-factor-effect.ipynb
 
