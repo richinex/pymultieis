@@ -72,4 +72,4 @@ The ``fit_sequential()`` offers a possibility to fit only a subset of the total 
 
   Parameter trend obtained from sequential fit of selected spectra
 
-The notebook for the above examples can be found in `batch-fit-vs-sequential-fit.ipynb <_docs/source/examples/batch-fit-vs-sequential-fit.ipynb>`_ notebook
+The notebook for the above examples can be found in `batch-fit-vs-sequential-fit.ipynb <docs/source/examples/batch-fit-vs-sequential-fit.ipynb>`_ notebook
