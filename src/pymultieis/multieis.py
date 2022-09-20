@@ -6,8 +6,9 @@ import torch
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import logging
+import collections
 from torch._vmap_internals import _vmap
-from typing import Callable, Optional, Union, Sequence, Tuple
+from typing import Callable, Optional, Dict, Union, Sequence, Tuple
 from torchmin import minimize, ScipyMinimizer, Minimizer, least_squares
 from datetime import datetime
 
@@ -210,6 +211,15 @@ class Multieis:
         if torch.all(arr > 0):
             return arr
         raise Exception("Values must be greater than zero")
+
+    @staticmethod
+    def try_convert(x):
+        try:
+            return str(x)
+        except Exception as e:
+            print(e.__doc__)
+            print(e.message)
+        return x
 
     @staticmethod
     def check_is_complex(arr):
@@ -714,7 +724,7 @@ class Multieis:
 
         self.popt = self.convert_to_external(self.par_log).detach()
         self.hess_inv = torch.tensor(optimizer2._result.hess_inv.todense())
-        self.chitot = optimizer2._result.fun
+        self.chitot = torch.as_tensor(optimizer2._result.fun)
 
         # Check if the hess_inv output from the optimizer is identity.
         # If yes, use the compute_perr function
@@ -859,7 +869,7 @@ class Multieis:
         optimizer2.step(closure2)
 
         self.popt = self.convert_to_external(self.par_log).detach()
-        self.chitot = optimizer2._result.fun
+        self.chitot = torch.as_tensor(optimizer2._result.fun)
         self.hess_inv = optimizer2._result.hess_inv
 
         # Check if the hess_inv output from the optimizer is identity.
@@ -2219,7 +2229,7 @@ class Multieis:
 
     def plot_params(self,
                     show_errorbar: bool = False,
-                    labels: Sequence[str] = None,
+                    labels: Dict[str, str] = None,
                     **kwargs,
                     ) -> None:
         """
@@ -2228,8 +2238,16 @@ class Multieis:
         :param show_errorbar: If set to True, \
                               the errorbars are shown on the parameter plot.
 
-        :param labels: A list or tuple containing the circuit elements\
-                       e.g ['Rs', 'Cdl']
+        :param labels: A dictionary containing the circuit elements\
+                       as keys and the units as values e.g \
+                       labels = {
+                        "Rs":"$\\Omega$",
+                        "Qh":"$F$",
+                        "nh":"-",
+                        "Rct":"$\\Omega$",
+                        "Wct":"$\\Omega\\cdot^{0.5}$",
+                        "Rw":"$\\Omega$"
+                        }
 
         :keyword fpath: Additional keyword arguments \
                          passed to plot (i.e file path)
@@ -2239,17 +2257,20 @@ class Multieis:
         if labels is None:
             self.labels = [str(i) for i in range(self.num_params)]
         else:
-            assert (len(labels) == self.num_params), (
+            assert (len(labels.items()) == self.num_params), (
                 """Ths size of the labels is {}
                 while the size of the parameters is {}"""
                 .format(
-                    len(labels), self.num_params
+                    len(labels.items()), self.num_params
                     )
                 )
-            assert (all(isinstance(item, str) for item in labels)), (
-                """Some items in labels are not valid strings"""
+            assert (isinstance(labels, collections.Mapping)), (
+                """labels is not a valid dictionary"""
                 )
-            self.labels = labels
+
+            self.labels = {
+                self.try_convert(k): self.try_convert(v) for k, v in labels.items()
+                }
 
         self.show_errorbar = show_errorbar
 
@@ -2258,7 +2279,10 @@ class Multieis:
         else:
 
             self.param_idx = [str(i) for i in self.indices]
-            params_df = pd.DataFrame(self.popt.T.numpy(), columns=self.labels)
+            params_df = pd.DataFrame(
+                self.popt.T.numpy(),
+                columns=[str(i) for i in range(self.num_params)]
+                )
             params_df["Idx"] = self.param_idx
             if self.show_errorbar is True:
                 # Plot with error bars
@@ -2272,6 +2296,7 @@ class Multieis:
                         yerr=self.perr.numpy(),
                         figsize=(15, 12),
                         rot=45,
+                        legend=False,
                     )
                     .ravel()[0]
                     .get_figure()
@@ -2287,12 +2312,21 @@ class Multieis:
                         layout=(5, 5),
                         figsize=(15, 12),
                         rot=45,
+                        legend=False
                     )
                     .ravel()[0]
                     .get_figure()
                 )
             plt.suptitle("Evolution of parameters ", y=1.01)
             plt.gcf().set_facecolor("white")
+            all_axes = plt.gcf().get_axes()
+            if labels is not None:
+                for i, (k, v) in enumerate(self.labels.items()):
+                    all_axes[i].set_ylabel(k + " " + "/" + " " + v, rotation=90)
+            else:
+                for i, v in enumerate(self.labels):
+                    all_axes[i].set_ylabel(v, rotation=90)
+
             plt.tight_layout()
             if kwargs:
                 fpath = kwargs.get("fpath", None)
@@ -2432,8 +2466,17 @@ class Multieis:
         :param show_errorbar: If set to True, \
                               the errorbars are shown on the parameter plot.
 
-        :param labels: A list or tuple containing the circuit elements\
-                       e.g ['Rs', 'Cdl']
+
+        :param labels: A dictionary containing the circuit elements\
+                       as keys and the units as values e.g \
+                       labels = {
+                        "Rs":"$\\Omega$",
+                        "Qh":"$F$",
+                        "nh":"-",
+                        "Rct":"$\\Omega$",
+                        "Wct":"$\\Omega\\cdot^{0.5}$",
+                        "Rw":"$\\Omega$"
+                        }
 
         :keyword fname: Name assigned to the directory, generated plots and data
 
@@ -2442,16 +2485,20 @@ class Multieis:
         if labels is None:
             self.labels = [str(i) for i in range(self.num_params)]
         else:
-            assert (len(labels) == self.num_params), (
+            assert (len(labels.items()) == self.num_params), (
                 """Ths size of the labels is {}
                 while the size of the parameters is {}"""
                 .format(
-                    len(labels), self.num_params
+                    len(labels.items()), self.num_params
                     )
                 )
-            assert (all(isinstance(item, str) for item in labels)), (
-                """Some items in labels are not valid strings"""
+            assert (isinstance(labels, collections.Mapping)), (
+                """labels is not a valid dictionary"""
                 )
+
+            self.labels = {
+                self.try_convert(k): self.try_convert(v) for k, v in labels.items()
+                }
 
         if not hasattr(self, "popt"):
             raise AttributeError("A fit() method has not been called.")
@@ -2464,11 +2511,15 @@ class Multieis:
                         Calling method with default args"""
                     )
                     self.plot_params(
-                        show_errorbar, fpath=self.img_path_name + "_params" + ".png"
+                        show_errorbar,
+                        labels=self.labels,
+                        fpath=self.img_path_name + "_params" + ".png"
                     )
                 else:
                     self.plot_params(
-                        show_errorbar, fpath=self.img_path_name + "_params" + ".png"
+                        show_errorbar,
+                        labels=self.labels,
+                        fpath=self.img_path_name + "_params" + ".png"
                     )
             except AttributeError as e:
                 logging.exception("", e, exc_info=True)
