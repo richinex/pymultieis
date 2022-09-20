@@ -2257,6 +2257,11 @@ class Multieis:
         if labels is None:
             self.labels = [str(i) for i in range(self.num_params)]
         else:
+
+            assert (isinstance(labels, collections.Mapping)), (
+                """labels is not a valid dictionary"""
+                )
+
             assert (len(labels.items()) == self.num_params), (
                 """Ths size of the labels is {}
                 while the size of the parameters is {}"""
@@ -2418,7 +2423,7 @@ class Multieis:
                 )
             else:
                 self.plot_nyquist(
-                    steps,
+                    self.steps,
                     fpath1=self.img_path_name + "_" + self.plot_title1.lower() + ".png",
                     fpath2=self.img_path_name + "_" + self.plot_title2.lower() + ".png",
                 )
@@ -2449,13 +2454,13 @@ class Multieis:
                 )
                 self.plot_bode(steps, fpath=self.img_path_name + "_bode" + ".png")
             else:
-                self.plot_bode(steps, fpath=self.img_path_name + "_bode" + ".png")
+                self.plot_bode(self.steps, fpath=self.img_path_name + "_bode" + ".png")
         except AttributeError as e:
             logging.exception("", e, exc_info=True)
 
     def save_plot_params(self,
                          show_errorbar: bool = False,
-                         labels: Sequence[str] = None,
+                         labels: Dict[str, str] = None,
                          *,
                          fname: str = None,
                          ) -> None:
@@ -2483,17 +2488,18 @@ class Multieis:
         :returns: A .png image of the the parameter plot
         """
         if labels is None:
-            self.labels = [str(i) for i in range(self.num_params)]
+            self.labels = None
         else:
+            assert (isinstance(labels, collections.Mapping)), (
+                """labels is not a valid dictionary"""
+                )
+
             assert (len(labels.items()) == self.num_params), (
                 """Ths size of the labels is {}
                 while the size of the parameters is {}"""
                 .format(
                     len(labels.items()), self.num_params
                     )
-                )
-            assert (isinstance(labels, collections.Mapping)), (
-                """labels is not a valid dictionary"""
                 )
 
             self.labels = {
@@ -2511,13 +2517,13 @@ class Multieis:
                         Calling method with default args"""
                     )
                     self.plot_params(
-                        show_errorbar,
+                        show_errorbar=True,
                         labels=self.labels,
                         fpath=self.img_path_name + "_params" + ".png"
                     )
                 else:
                     self.plot_params(
-                        show_errorbar,
+                        show_errorbar=self.show_errorbar,
                         labels=self.labels,
                         fpath=self.img_path_name + "_params" + ".png"
                     )
