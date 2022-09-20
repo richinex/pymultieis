@@ -1962,12 +1962,21 @@ class Multieis:
         which means that a capacitor's opposition
         to current is a negative imaginary quantity.
 
+
         :param steps: Spacing between plots. Defaults to 1.
 
         :keyword fpath: Additional keyword arguments \
                          passed to plot (i.e file path)
 
         :returns: The bode plots.
+
+        Notes
+        ---------
+
+        .. math::
+
+            \\theta = arctan2 (\\frac{\\Im{Z}}{\\Re{Z}} \\frac{180}{\\pi})
+
         """
         assert (
             steps <= self.Z_exp.shape[1]
