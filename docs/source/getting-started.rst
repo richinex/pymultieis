@@ -225,11 +225,6 @@ The :code:`save_plot_params()` can only be called after a fit is performed.
   eis_redox.save_plot_params(fname='redox')
 
 
-.. note::
-
-   If the plotting methods are not called before saving methods,
-   default arguments are used to automatically generate the plots.
-
 The is also a :code:`save_results()` method which saves the optimal paramaters popt, the standard error of the parameters perr,
 the predicted spectra Z_pred and the metrics associated with the fit.  The save methods have an fname parameter which takes as
 argument a string representing the name the sub-folder within the current working directory into which plots and results are saved.
