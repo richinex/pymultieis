@@ -38,6 +38,7 @@ extensions = [
     'sphinx.ext.githubpages',
     'nbsphinx',
     'sphinxemoji.sphinxemoji',
+    'sphinx.ext.mathjax' ,
 ]
 
 sphinxemoji_style = 'twemoji'
