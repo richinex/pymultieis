@@ -135,7 +135,7 @@ Next, we define an initial guess, bounds and smoothing factor for each of the pa
 .. note::
 
    The values of the smoothing factor ``smf`` are not fixed. They could vary depending on the
-   data and weighting used. Check out :ref:`smoothing-factor-effect-label` for an example of this.
+   data and weighting used. Check out :ref:`examples-label` for an example of this.
 
 
 Step 4: Create an instance of the fitting class
