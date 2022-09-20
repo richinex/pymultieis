@@ -169,11 +169,11 @@ which for most problems, setting ``learning_rate`` = 1e-3 and ``num_epochs`` = 5
 We can access the fit parameters with :code:`circuit.parameters_` or by
 printing the circuit object itself, :code:`print(circuit)`.
 
-Step 6: Visualize the results
+Step 6: Visualize the plots
 =====================================
 
 
-In order to make it easy to visualize the results of the fit, :code:`pymultieis` offers three different plotting methods.
+In order to make it easy to visualize the plots resulting from the fitting procedure, :code:`pymultieis` offers three different plotting methods.
 We call the :code:`plot_nyquist()` method on the instance we created to view the complex plane plots,
 the :code:`plot_bode()` to view the bode plots and the :code:`plot_params()` method to view the parameter plot. Thus we have a total of four generated plots:
 
