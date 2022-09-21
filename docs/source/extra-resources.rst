@@ -8,7 +8,7 @@ Extra Resources
 Distributed Elements
 ===================================================
 
-1. Semi-infinite (planar infinite length) Warburg
+Semi-infinite (planar infinite length) Warburg
 ***************************************************
 
 Describes linear diffusion from a medium with lebgth which can be approximated
@@ -41,7 +41,7 @@ And
   Zw = torch.sqrt(Rd/s*Cd) * (torch.sqrt(Rd * s*Cd))
 
 
-2. Finite length diffusion with reflective boundary
+Finite length diffusion with reflective boundary
 *****************************************************
 
 Describes the reaction of mobile active species distributed in a layer with finite length,
@@ -65,7 +65,7 @@ Where :math:`\phi` = 0.5
   ZWs = torch.sqrt(Rd/s*Cd) * 1/torch.tanh(torch.sqrt(Rd * s*Cd))
 
 
-3. Finite length diffusion with transmissive boundary
+Finite length diffusion with transmissive boundary
 ******************************************************
 
 Describes the reaction of mobile active species distributed in a layer with finite length,
