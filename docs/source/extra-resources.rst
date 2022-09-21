@@ -14,7 +14,7 @@ Semi-infinite (planar infinite length) Warburg
 Describes linear diffusion from a medium with lebgth which can be approximated
 as infinite.
 
-.. math:: Z_{W} = \frac{\sigma}{\sqrt{w}}(1-j)
+.. math:: Z_{W} = \frac{A_W}{\sqrt{w}}(1-j)
     :label: ZW
 
 Or
@@ -28,7 +28,7 @@ Where :math:`s = j \omega` and :math:`\sigma` has units of :math:`\Omega s^{-0.5
 And
 
 .. math::
-    \sigma = \frac{RT}{F^{2}C_{o}\sqrt{D_o}}
+    A_W = \frac{RT}{F^{2}C_{o}\sqrt{D_o}}
 
 .. code-block:: python
 
