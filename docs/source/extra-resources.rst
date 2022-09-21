@@ -75,7 +75,7 @@ terminated by an impermeable boundary.
     Z_{Ws} = \sqrt{\frac{R_d}{s C_d}} \tanh(\sqrt{R_{d}~sC_{d}})
 
 
-.. math:: Z_{Wo} = R \frac{tanh(j \omega \tau)^{\phi}}{(j \omega \tau)_{\phi}}
+.. math:: Z_{Ws} = R \frac{tanh(j \omega \tau)^{\phi}}{(j \omega \tau)_{\phi}}
     :label: ZWs
 
 
