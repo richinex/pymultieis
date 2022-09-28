@@ -307,7 +307,7 @@ def test_save_and_read_results(rootdir):
         weight='modulus',
         immittance='admittance'
         )
-    popt, perr, chisqr, chitot, AIC = multieis_instance.fit_simultaneous(method='TNC')
+    popt, perr, chisqr, chitot, AIC = multieis_instance.fit_simultaneous(method='bfgs')
     test_file = os.path.join(rootdir, 'test_results/results/test_results_popt.npy')
     popt_test = np.load(test_file)
     assert np.allclose(popt, popt_test, rtol=1e-3, atol=1e-3, equal_nan=True)

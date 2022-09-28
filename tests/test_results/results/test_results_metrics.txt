@@ -1,1 +1,1 @@
-Immittance Weight AIC chisqr chitotadmittance modulus -1954.29 1.90e-04 2.06e-04
+Immittance Weight AIC chisqr chitotadmittance modulus -2060.48 3.19e-05 3.74e-05
