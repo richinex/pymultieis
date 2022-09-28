@@ -87,3 +87,5 @@ Where :math:`\phi` = 0.5
   ZWs = torch.sqrt(Rd/s*Cd) * torch.tanh(torch.sqrt(Rd * s*Cd))
 
 
+Resources on the web
+===================================================

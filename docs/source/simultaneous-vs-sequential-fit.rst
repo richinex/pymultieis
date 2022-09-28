@@ -4,9 +4,9 @@
 Simultaneous vs sequential fit
 =========================================
 
-:code:`pymultipleis` offers a ``fit_sequential()`` method for fitting individual spectra with or without a dependence.
+:code:`pymultieis` offers a ``fit_sequential()`` method for fitting individual spectra with or without a dependence.
 It is based on the regular complex nonlinear least squares and uses the least-squares minimization algorithm
-from the `jaxopt API <https://jaxopt.github.io/stable/index.html/>`_ .
+from the `Pytorch-minimize library <https://pytorch-minimize.readthedocs.io/en/latest/examples/index.html#nonlinear-least-squares>`_ .
 
 
 1: Preserving correlation between parameters
@@ -48,7 +48,7 @@ A detailed example can be found in the :ref:`examples-label` page.
 
 .. code-block:: python
 
-  eis_her_sequential = Multieis(p0, F_her, Y_her, bounds, smf_modulus, her, weight= Yerr, immittance='admittance')
+  eis_her_sequential = pym.Multieis(p0, F_her, Y_her, bounds, smf_modulus, her, weight= Yerr, immittance='admittance')
   eis_her_sequential.fit_sequential()
   eis_her_sequential.plot_params()
 
@@ -60,7 +60,7 @@ A detailed example can be found in the :ref:`examples-label` page.
 
 .. code-block:: python
 
-  eis_her_simultaneous = Multieis(p0, F_her, Y_her, bounds, smf_modulus, her, weight= 'modulus', immittance='admittance')
+  eis_her_simultaneous = pym.Multieis(p0, F_her, Y_her, bounds, smf_modulus, her, weight= 'modulus', immittance='admittance')
   popt, perr, chisqr, chitot, AIC = eis_her_simultaneous.fit_simultaneous()
   popt, perr, chisqr, chitot, AIC = eis_her_simultaneous.fit_sequential()
   eis_her_simultaneous.plot_params()

@@ -1,48 +1,55 @@
+<div align="center">
+<img src="https://github.com/richinex/pymultieis/blob/main/docs/source/_static/z_bode.png" alt="logo"></img>
+</div>
+
+
 pymultieis
 =============
 
-   ``"Simplicity is the ultimate sophistication - Leonardo da Vinci"``
-
-``pymultieis`` offers a robust approach to batch-fitting electrochemical impedance spectra with a dependence.
-Dependence implies that the spectra being fitted are gradually varying or similar to each other
-and were obtained as a result of continuous change of in the property of the electrochemical system under study.
-Such properties include but are not limited to temperature, potential, state of charge and depth of discharge.
-
-The batch-fitting algorithm implemented in pymultieis allows the kinetic parameters of the system
-such as the charge transfer resistance, double layer capacitance and Warburg coefficient to be obtained
-as curves which vary as a function of the dependent variable under study.
-
-The ``py`` in ``pymultieis`` represents python while the ``multieis`` is an abbreviation for ``Multiple Electrochemical Impedance Spectra``.
-
-``pymultieis`` offers methods modules for model fiting, model validation, visualization,
+[**Installation**](#installation)
+| [**Examples**](https://github.com/richinex/pymultieis/tree/main/docs/source/examples)
+| [**Documentation**](https://pymultieis.readthedocs.io/en/latest/index.html)
+| [**References**](#references)
 
 
-Installation
-*************
+A library for fitting a sequence of electrochemical impedance spectra.
 
-   pip install pymultieis
+- Implements algorithms for simultaneous and sequential fitting.
 
-[Getting started with pymultieis](https://pymultieis.readthedocs.io/en/latest/getting-started.html) contains a step-by-step tutorial
-fitting your data with ``pymultieis``.
+- Written in python and based on the [PyTorch](https://pytorch.org/) library.
 
-Dependencies
-**************
+- Leverages deterministic solvers from [pytorch-minimize](https://pytorch-minimize.readthedocs.io/en/latest/api/index.html) which computes the first- and second-order derivatives via autograd.
 
-pymultieis requires:
+## Installation<a id="installation"></a>
+
+pymultieis requires the following:
 
 -   Python (>=3.9)
--   torch (>=1.12.1)
--   SciPy (>=1.9.1)
+-   [torch](https://pytorch.org/get-started/locally/) (>=1.12.1)
+-   [pytorch-minimize](https://pytorch-minimize.readthedocs.io/en/latest/install.html)
+-   Matplotlib (>=3.6.0)
 -   NumPy (>=1.23.3)
 -   Pandas (>=1.4.4)
--   Matplotlib (>=3.6.0)
--   Pytorch-minimize
+-   SciPy (>=1.9.1)
 
 
-Several example notebooks are provided in the examples/ directory.
-Opening these will require Jupyter notebook or Jupyter lab.
+After installing the dependencies, you can now install pymultieis via the following pip command
 
-Examples
-*********************
+```
+pip install pymultieis
+```
 
-Detailed tutorials on several aspects of ``pymultieis`` can be found on the [examples page](https://pymultieis.readthedocs.io/en/latest/examples.html).
+[Getting started with pymultieis](https://pymultieis.readthedocs.io/en/latest/quick-start-guide.html#) contains a quick start guide to
+fitting your data with ``pymultieis``.
+
+
+## Examples
+
+Detailed tutorials on other aspects of ``pymultieis`` can be found in [Examples](https://github.com/richinex/pymultieis/tree/main/docs/source/examples).
+
+## Documentation
+
+Details about the ``pymultieis`` API, can be found in the [reference documentation](https://pymultieis.readthedocs.io/en/latest/index.html).
+
+
+## References

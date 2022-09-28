@@ -34,10 +34,11 @@ Step 2: Load your data
 The data which is loaded should comprises a vector of frequencies at which the immittance data was taken,
 and the 2-D array of complex immittances (impedances or admittances) where the size of the rows correspond
 to the length of the frequencies vector and the size of the columns is the number of spectra to be fitted.
-It is assumed that the frequencies are uniform for all the spectra in a particular series.
+If we know the standard deviation of our immittance measurements, this can also be used instead of the ``modulus`` or other weighting options.
+It is assumed that the frequencies are equal for all the spectra in a particular series.
 The frequencies and immittance shall be our freq and Z when we create our Multieis instance.
 In the example below the files which were originally stored as numpy arrays
-will be converted to torch tensors using the :code:`pymultieis` function.
+will be converted to torch tensors using the :code:`torch.as_tensor()` function.
 
 We assume that we have our files in the data folder one step above working directory
 
@@ -45,6 +46,7 @@ We assume that we have our files in the data folder one step above working direc
 
   import numpy as np
   import torch
+  import pymultieis.multieis as pym
 
 .. testsetup::
 
@@ -117,6 +119,27 @@ For instance we shall convert modified *Randles* circuit shown below to a python
       Y = 1/Z
       return torch.cat((Y.real, Y.imag), dim = 0)
 
+An even simpler way would be to predefine a function ``par`` which computes the total impedance of circuit elements in parallel
+
+.. code-block:: python
+
+  par = lambda a, b: 1/(1/a + 1/b) # Defines the total impedance of circuit elements in parallel
+
+  def redox(p, f):
+      w = 2*torch.pi*f                      # Angular frequency
+      s = 1j*w                              # Complex variable
+      Rs = p[0]
+      Qh = p[1]
+      nh = p[2]
+      Rct = p[3]
+      Wct = p[4]
+      Rw = p[5]
+      Zw = Wct/torch.sqrt(w) * (1-1j)       # Planar infinite length Warburg impedance
+      Zdl = 1/(s**nh*Qh)                    # admittance of a CPE
+      Z = Rs + par(Zdl, Rct + par(Zw, Rw))
+      Y = 1/Z
+      return torch.cat((Y.real, Y.imag), dim = 0)
+
 .. tip::
   The key idea to remember is that for circuit elements in series, we add their impedances while for
   elements in parallel, we add their admittances.
@@ -134,8 +157,9 @@ Next, we define an initial guess, bounds and smoothing factor for each of the pa
 
 .. note::
 
-   The values of the smoothing factor ``smf`` are not fixed. They could vary depending on the
-   data and weighting used. Check out :ref:`examples-label` for an example of this.
+   The smoothing factor is a value that determines how smoothly a certain parameter varies as A
+   function of the sequence index. The values of the smoothing factor ``smf`` are not fixed. They could vary depending on the
+   data and weighting used. Check out the :ref:`examples-label` page for more details.
 
 
 Step 4: Create an instance of the fitting class
@@ -147,17 +171,22 @@ and the :code:`immittance` we are modeling which in this case is the admittance.
 
 .. code-block:: python
 
-  eis_redox = Multieis(p0, F, Y, bounds, smf, redox, weight= Yerr, immittance='admittance')
+  eis_redox = pym.Multieis(p0, F, Y, bounds, smf, redox, weight= Yerr, immittance='admittance')
 
+.. note::
+
+   The details of the computation of the standard deviation of the admittance used in this guide is given
+   in this `paper <https://doi.org/10.1002/celc.202200109>`_.
+   Methods for obtaining the standard deviation of impedance measurements are briefly described under the :ref:`FAQ-label` section.
 
 
 Step 5: Fit the model to data
 =======================================
 
 Once our class in instantiated, we fit the data by calling any of the fit methods.
-:code:`pymultieis` offers a :code:`fit_deterministic()`, :code:`fit_refine()` and a :code:`fit_stochastic()` method.
-The :code:`fit_deterministic()` and :code:`fit_refine()` methods have accept two extra arguments: :code:`method`
-which can be any of the Quasi-Newton methods (BFGS and L-BFGS-B) and `:code:`n_iter`, an integer
+:code:`pymultipleis` offers a :code:`fit_simultaneous()`, :code:`fit_simultaneous_zero()` and a :code:`fit_stochastic()` method.
+The :code:`fit_simultaneous()` and :code:`fit_simultaneous_zero()` methods have accept two extra arguments: :code:`method`
+which can be any of the methods (TNC, BFGS and L-BFGS-B) and :code:`n_iter`, an integer
 which determines the number of iterations used in the minimization. :code:`fit_stochastic()` takes in two arguments,
 a learning rate (:code:`lr`) and :code:`num_epochs`, which for most problems,
 setting ``learning_rate`` = 1e-3 and ``num_epochs`` = 5e5 is probably sufficient.

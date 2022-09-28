@@ -10,7 +10,6 @@ Examples
 
     examples/getting-started.ipynb
     examples/sequential-fit.ipynb
-    examples/intercalation.ipynb
     examples/smoothing-factor-effect.ipynb
 
 
