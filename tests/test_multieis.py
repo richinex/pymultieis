@@ -93,8 +93,6 @@ smf_inf = torch.as_tensor(
         )
 
 
-# Test for weight type
-
 all_weights = [Yerr, 'modulus', 'proportional', None]
 
 true_weights = ['sigma', 'modulus', 'proportional', 'unit']
@@ -102,7 +100,7 @@ true_weights = ['sigma', 'modulus', 'proportional', 'unit']
 
 @pytest.mark.parametrize("weight, true_weight", list(zip(all_weights, true_weights)))
 def test_weight_name(weight, true_weight):
-    """Test least-squares problem on unconstrained minimizers."""
+    """Test for weight type."""
 
     multieis_instance = pym.Multieis(
         p0,
@@ -118,8 +116,6 @@ def test_weight_name(weight, true_weight):
     assert (true_weight == multieis_instance.weight_name)
 
 
-# Test for immittance type
-
 all_immittances = ['admittance', 'impedance']
 
 true_immittances = ['admittance', 'impedance']
@@ -130,7 +126,7 @@ true_immittances = ['admittance', 'impedance']
     list(zip(all_immittances, true_immittances))
     )
 def test_immittance(immittance, true_immittance):
-    """Test least-squares problem on unconstrained minimizers."""
+    """Test for immittance type."""
 
     multieis_instance = pym.Multieis(
         p0,
@@ -273,13 +269,13 @@ def test_shape_equality_between_F_and_Z():
     assert str(excinfo.value) == "Length mismatch: The len of F is 44 while the rows of Z are 45"
 
 
-# Test for equality of value between wrms_func and cost_func when smoothing is zero
 all_methods = ['TNC', 'BFGS', 'L-BFGS-B']
 
 
 @pytest.mark.parametrize("method, weight", list(zip(all_methods, all_weights)))
 def test_equality_of_wrms_func_and_cost_func(method, weight):
-    """Test least-squares problem on unconstrained minimizers."""
+    """Test for equality of value between
+       wrms_func and cost_func when smoothing is zero"""
 
     multieis_instance = pym.Multieis(
         p0,
@@ -308,6 +304,10 @@ def test_save_and_read_results(rootdir):
         immittance='admittance'
         )
     popt, perr, chisqr, chitot, AIC = multieis_instance.fit_simultaneous(method='bfgs')
-    test_file = os.path.join(rootdir, 'test_results/results/test_results_popt.npy')
-    popt_test = np.load(test_file)
+    popt_test_file = os.path.join(rootdir, 'test_results/results/test_results_popt.npy')
+    perr_test_file = os.path.join(rootdir, 'test_results/results/test_results_perr.npy')
+    popt_test = np.load(popt_test_file)
+    perr_test = np.load(perr_test_file)
     assert np.allclose(popt, popt_test, rtol=1e-3, atol=1e-3, equal_nan=True)
+    assert np.allclose(perr, perr_test, rtol=1e-3, atol=1e-3, equal_nan=True)
+    assert np.allclose(popt_test.shape, perr_test.shape, rtol=1e-3, atol=1e-3, equal_nan=True)
