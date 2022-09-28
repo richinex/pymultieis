@@ -30,13 +30,13 @@ Installation
 
    pip install pymultieis
 
-:ref:`getting-started-label` contains a step-by-step tutorial
+:ref:`quick-start-guide-label` contains a step-by-step tutorial
 on getting started with :code:`pymultieis`.
 
 Dependencies
 ~~~~~~~~~~~~
 
-impedance.py requires:
+pymultieis requires:
 
 -   Python (>=3.9)
 -   torch (>=1.12.1)
@@ -53,7 +53,7 @@ Opening these will require Jupyter notebook or Jupyter lab.
 Examples and Documentation
 ---------------------------
 
-:ref:`getting-started-label` contains a detailed guide on getting started with :code:`pymultieis`.
+:ref:`quick-start-guide-label` contains a detailed guide on getting started with :code:`pymultieis`.
 It is assumed that the user is already familiar with basic python syntax.
 Detailed tutorials on several aspects of :code:`pymultieis` can be found in the :code:`examples/` directory.
 The documentation can be found at
@@ -62,7 +62,7 @@ The documentation can be found at
    :maxdepth: 2
    :caption: Contents:
 
-   getting-started
+   quick-start-guide
    pymultieis
    examples
    batch-fit-vs-sequential-fit

@@ -1,4 +1,4 @@
-.. _getting-started-label:
+.. _quick-start-guide-label:
 
 =========================================
 Getting started with :code:`pymultieis`
@@ -15,7 +15,7 @@ The following steps are good starting points towards analyzing your own data usi
 
 .. hint::
 
-  Please do not hesistate to `open an issue <https://github.com/richinex/pymultieis/issues>`_ if you encounter any difficulties or notice any bugs.
+  Please do not hesistate to `open an issue <https://github.com/richinex/pymultieis/issues>`_ should you encounter any difficulties or notice any bugs.
 
 Step 1: Installation
 ====================
@@ -32,8 +32,8 @@ Step 2: Load your data
 ================================
 
 The data which is loaded should comprises a vector of frequencies at which the immittance data was taken,
-and the 2-D array of complex immittances (impedances or admittances) where the number of rows correspond
-to the length of the frequencies vector and the length of the columns is the number of spectra to be fitted.
+and the 2-D array of complex immittances (impedances or admittances) where the size of the rows correspond
+to the length of the frequencies vector and the size of the columns is the number of spectra to be fitted.
 It is assumed that the frequencies are uniform for all the spectra in a particular series.
 The frequencies and immittance shall be our freq and Z when we create our Multieis instance.
 In the example below the files which were originally stored as numpy arrays
@@ -155,19 +155,16 @@ Step 5: Fit the model to data
 =======================================
 
 Once our class in instantiated, we fit the data by calling any of the fit methods.
-:code:`pymultieis` offers a :code:`fit_deterministic()` and :code:`fit_deterministic2()`,
-:code:`fit_refine()` and a :code:`fit_stochastic()` method.
-The :code:`fit_deterministic()` and :code:`fit_deterministic2()` have one adjustable parameter :code:`n_iter`
-which determines the number of iterations used in the minimization while :code:`fit_stochastic()` takes in two arguments,
-a learning rate (:code:`lr`) and :code:`num_epochs`,
-which for most problems, setting ``learning_rate`` = 1e-3 and ``num_epochs`` = 5e5 is probably very good.
+:code:`pymultieis` offers a :code:`fit_deterministic()`, :code:`fit_refine()` and a :code:`fit_stochastic()` method.
+The :code:`fit_deterministic()` and :code:`fit_refine()` methods have accept two extra arguments: :code:`method`
+which can be any of the Quasi-Newton methods (BFGS and L-BFGS-B) and `:code:`n_iter`, an integer
+which determines the number of iterations used in the minimization. :code:`fit_stochastic()` takes in two arguments,
+a learning rate (:code:`lr`) and :code:`num_epochs`, which for most problems,
+setting ``learning_rate`` = 1e-3 and ``num_epochs`` = 5e5 is probably sufficient.
 
 .. code-block:: python
 
   popt, perr, chisqr, chitot, AIC = eis_redox.fit_deterministic()
-
-We can access the fit parameters with :code:`circuit.parameters_` or by
-printing the circuit object itself, :code:`print(circuit)`.
 
 Step 6: Visualize the plots
 =====================================
@@ -181,9 +178,12 @@ the :code:`plot_bode()` to view the bode plots and the :code:`plot_params()` met
 * The Bode plots - can be called before and after a fit.
 * The plot of the optimal parameters - can only be called after a fit.
 
-The :code:`plot_nyquist()` and :code:`plot_bode()` methods take in a :code:`steps` argument which determines the interval over which the plots are sampled.
-The default argument for the steps parameter is 1. A maximum of 20 plots can be shown to avoid cluttering the screen.
-The :code:`plot_params()` method has a :code:`show_errorbar` parameter. When set to True, the parameters are plotted with their respective standard deviations shown as errorbars.
+The :code:`plot_nyquist()` and :code:`plot_bode()` methods take in a :code:`steps` argument which determines
+the interval over which the plots are sampled. The default argument for the steps parameter is 1.
+A maximum of 20 plots can be shown to avoid cluttering the screen. The :code:`plot_params()` method
+has a :code:`show_errorbar` parameter which accepts a boolean. When set to True,
+the parameters are plotted with their respective standard deviations shown as errorbars. There is also a labels parameters
+which accepts a dictionary as argument. The keys represent the circuit elements while the values are the respective units.
 
 .. code-block:: python
 
@@ -225,10 +225,11 @@ The :code:`save_plot_params()` can only be called after a fit is performed.
   eis_redox.save_plot_params(fname='redox')
 
 
-The is also a :code:`save_results()` method which saves the optimal paramaters popt, the standard error of the parameters perr,
-the predicted spectra Z_pred and the metrics associated with the fit.  The save methods have an fname parameter which takes as
-argument a string representing the name the sub-folder within the current working directory into which plots and results are saved.
-If no fname is provided, a default name 'fit' is used. See an example of saving below.
+The is also a :code:`save_results()` method which saves the optimal paramaters ``popt``, the standard error of the parameters ``perr``,
+the predicted spectra ``Z_pred`` and the metrics associated with the fit i.e. the ``chisquare`` and the Akaike Information Criterion ``AIC``.
+The save methods have an ``fname`` parameter which accepts as argument a string representing the name given to the sub-folder within the current working directory
+into which plots and results are saved.
+If no fname is provided, a default name 'fit' is used. See an example of saving with an ``fname`` below.
 
 .. code-block:: python
 

@@ -22,6 +22,7 @@ sphinxcontrib-napoleon = "^0.7"
 ipykernel = "^6.15.3"
 flake8 = "^5.0.4"
 pre-commit = "^2.20.0"
+pytorch-minimize = {url = "https://test-files.pythonhosted.org/packages/49/d3/ba8743747af15e8298a3c06bdb0cfad58ff09ddd8dc3cd8c9f4d5ff47a37/pytorch_minimize-0.0.1-py3-none-any.whl#sha256=d0d8b234b3c8b712de191dcffa2d06d23a64b1cf66109f378790924f95369422"}
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

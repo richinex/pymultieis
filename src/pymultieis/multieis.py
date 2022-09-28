@@ -9,7 +9,7 @@ import logging
 import collections
 from torch._vmap_internals import _vmap
 from typing import Callable, Optional, Dict, Union, Sequence, Tuple
-from torchmin import minimize, ScipyMinimizer, Minimizer, least_squares
+from torchmin import minimize, ScipyMinimizer, least_squares
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
@@ -90,7 +90,7 @@ class Multieis:
             print("Bounds must be a sequence of min-max pairs")
 
         if p0.ndim == 1:
-            self.p0 = self.check_zero_and_negative_values(p0)
+            self.p0 = self.check_zero_and_negative_values(self.check_nan_values(p0))
             self.num_params = len(self.p0)
             assert (
                 len(self.lb) == self.num_params
@@ -106,7 +106,7 @@ class Multieis:
                                         greater than the upper bound
                                         or less than lower bound""")
         elif (p0.ndim == 2) and (1 in p0.shape):
-            self.p0 = self.check_zero_and_negative_values(p0.flatten())
+            self.p0 = self.check_zero_and_negative_values(self.check_nan_values(p0.flatten()))
             self.num_params = len(self.p0)
             assert (
                 len(self.lb) == self.num_params
@@ -128,7 +128,7 @@ class Multieis:
                 len(self.lb) == p0.shape[0]
             ), ("The len of p0 is {} while that of the bounds is {}"
                 .format(p0.shape[0], len(self.lb)))
-            self.p0 = self.check_zero_and_negative_values(p0)
+            self.p0 = self.check_zero_and_negative_values(self.check_nan_values(p0))
             self.num_params = p0.shape[0]
 
         self.immittance_list = ["admittance", "impedance"]
@@ -205,6 +205,13 @@ class Multieis:
                 {self.func},{self.immittance},{self.weight_name})"""
 
     __repr__ = __str__
+
+    @staticmethod
+    def check_nan_values(arr):
+        if torch.isnan(torch.sum(arr)):
+            raise Exception("Values must not contain nan")
+        else:
+            return arr
 
     @staticmethod
     def check_zero_and_negative_values(arr):
@@ -404,7 +411,7 @@ class Multieis:
         z_concat = torch.cat([z.real, z.imag], dim=0)
         sigma = torch.cat([zerr_re, zerr_im], dim=0)
         z_model = self.func(p, f)
-        residuals = (z_concat - z_model) / sigma
+        residuals = 0.5 * ((z_concat - z_model) / sigma)
         return residuals
 
     def wrms_func(self,
@@ -472,7 +479,7 @@ class Multieis:
         :param LB: A 1D tensor of values for \
                    the lower bounds (for the total parameters)
 
-        :param LB: A 1D tensor of values for \
+        :param UB: A 1D tensor of values for \
                    the upper bounds (for the total parameters)
 
         :param smf: A tensor of real elements same size as p0. \
@@ -483,7 +490,7 @@ class Multieis:
         """
         P_log = self.convert_to_internal(P)
 
-        chitot = self.cost_func(P_log, F, Z, Zerr_Re, Zerr_Im, LB, UB, smf)
+        chitot = self.cost_func(P_log, F, Z, Zerr_Re, Zerr_Im, LB, UB, smf)/self.dof
         hess_mat = torch.autograd.functional.hessian(
             self.cost_func, (P_log, F, Z, Zerr_Re, Zerr_Im, LB, UB, smf)
         )[0][0]
@@ -522,7 +529,8 @@ class Multieis:
         which is a combination of the weighted residual sum of squares
         and the smoothing factor divided by the degrees of freedom
 
-        :param P: A 2D tensor of parameter values
+        :param P: A 1D tensor of parameter values in \
+                  log scale
 
         :param F: A 1D tensor of frequency
 
@@ -537,7 +545,7 @@ class Multieis:
         :param LB: A 1D tensor of values for \
                    the lower bounds (for the total parameters)
 
-        :param LB: A 1D tensor of values for \
+        :param UB: A 1D tensor of values for \
                    the upper bounds (for the total parameters)
 
         :param smf: A tensor of real elements same size as p0. \
@@ -566,7 +574,59 @@ class Multieis:
         wrss_tot = _vmap(self.wrss_func, in_dims=(1, None, 1, 1, 1))(
             P_norm, F, Z, Zerr_Re, Zerr_Im
         )
-        return (torch.sum(wrss_tot) + chi_smf) / self.dof
+        return (torch.sum(wrss_tot) + chi_smf)
+
+    def compute_perr_QR(self,
+                        P: torch.tensor,
+                        X: torch.tensor,
+                        Z: torch.tensor,
+                        Zerr_Re: torch.tensor,
+                        Zerr_Im: torch.tensor
+                        ) -> torch.tensor:
+
+        """
+        Computes the error on the parameters resulting from the batch fit
+        using QR decomposition
+
+        :param P: A 2D tensor of parameter values
+
+        :param F: A 1D tensor of frequency
+
+        :param Z: A 2D tensor of complex immittances
+
+        :param Zerr_Re: A 2D tensor of weights for \
+                        the real part of the immittance
+
+        :param Zerr_Im: A 2D tensor of weights for \
+                        the imaginary part of the immittance
+
+        :returns: A 2D tensor of the standard error on the parameters
+
+        """
+        def grad_func(p, f):
+            return torch.autograd.functional.jacobian(self.func, (p, f))[0]
+        perr = torch.zeros(self.num_params, self.num_eis)
+        for i in range(self.num_eis):
+            wrms = self.wrms_func(P[:, i], X, Z[:, i], Zerr_Re[:, i], Zerr_Im[:, i])
+            gradsre = grad_func(P[:, i], X)[:self.num_freq]
+            gradsim = grad_func(P[:, i], X)[self.num_freq:]
+            rtwre = torch.diag((1/Zerr_Re[:, i]))
+            rtwim = torch.diag((1/Zerr_Im[:, i]))
+            vre = rtwre.double()@gradsre.double()
+            vim = rtwim.double()@gradsim.double()
+            Q1, R1 = torch.linalg.qr(torch.cat([vre , vim], dim=0))
+            try:
+                # Here we check to see if the Hessian matrix is singular or
+                # ill-conditioned since this makes accurate computation of the
+                # confidence intervals close to impossible.
+                invR1 = torch.linalg.inv(R1)
+            except torch.linalg.LinAlgError:
+                print(f"\nHessian Matrix is singular for spectra {i}")
+                invR1 = torch.ones(size=(self.num_params, self.num_params))
+
+            perr[:, i] = torch.linalg.vector_norm(invR1, dim=1)*torch.sqrt(wrms)
+        # if the error is nan, a value of 1 is assigned.
+        return torch.nan_to_num(perr, nan=1.0)
 
     def compute_aic(self,
                     p: torch.tensor,
@@ -630,163 +690,19 @@ class Multieis:
             aic = m2lnL + 2 * (self.num_params + 1)
         return aic
 
-    def fit_deterministic(self,
-                          n_iter: int = 5000
-                          ) -> Tuple[
-        torch.tensor, torch.tensor, torch.tensor, torch.tensor, torch.tensor
-    ]:
-
-        """
-        Fitting routine.
-
-        :params n_iter: Number of iterations
-
-
-        :returns: A tuple containing the optimal parameters (popt), \
-                  the standard error of the parameters (perr), \
-                  the objective function at the minimum (chisqr), \
-                  the total cost function (chitot) and the AIC
-        """
-        if hasattr(self, "popt") and self.popt.shape[1] == self.Z.shape[1]:
-            print("Using popt")
-
-            self.par_log = (
-                self.convert_to_internal(self.popt).type(torch.DoubleTensor)
-            ).requires_grad_(True)
-        else:
-
-            self.par_log = (
-                self.convert_to_internal(self.p0).type(torch.DoubleTensor)
-            ).requires_grad_(True)
-            print("Using p0")
-
-        # Optimizer 1 uses the BFGS algorithm
-        start = datetime.now()
-        optimizer1 = ScipyMinimizer(
-            params=[self.par_log], method="bfgs",
-            tol=1e-16, options={"maxiter": n_iter}
-        )
-        self.iteration = 0
-
-        def closure():
-            optimizer1.zero_grad()
-            loss = self.cost_func(
-                self.par_log,
-                self.F,
-                self.Z,
-                self.Zerr_Re,
-                self.Zerr_Im,
-                self.lb_vec,
-                self.ub_vec,
-                self.smf,
-            )
-            loss.backward()
-            self.iteration += 1
-            print(
-                "\rIteration : {}, Loss : {:.5e}"
-                .format(self.iteration, loss.detach().clone()),
-                end="",
-            )
-            if self.iteration % 1000 == 0:
-                print("")
-            return loss
-
-        optimizer1.step(closure)
-        self.popt = self.convert_to_external(self.par_log).detach()
-        self.par_log = (
-            self.convert_to_internal(self.popt).type(torch.DoubleTensor)
-        ).requires_grad_(True)
-
-        # Optimizer 2 uses the LBFGS algorithm
-        optimizer2 = ScipyMinimizer(
-            params=[self.par_log],
-            method="l-bfgs-b",
-            tol=1e-16,
-            options={"maxiter": n_iter},
-        )
-
-        def closure():
-            optimizer2.zero_grad()
-            loss = self.cost_func(
-                self.par_log,
-                self.F,
-                self.Z,
-                self.Zerr_Re,
-                self.Zerr_Im,
-                self.lb_vec,
-                self.ub_vec,
-                self.smf,
-            )
-            loss.backward()
-            return loss
-
-        optimizer2.step(closure)
-
-        self.popt = self.convert_to_external(self.par_log).detach()
-        self.hess_inv = torch.tensor(optimizer2._result.hess_inv.todense())
-        self.chitot = torch.as_tensor(optimizer2._result.fun)
-
-        # Check if the hess_inv output from the optimizer is identity.
-        # If yes, use the compute_perr function
-        if torch.allclose(
-            self.hess_inv.type(torch.FloatTensor), torch.eye(len(self.par_log))
-        ):
-            print("""Computing standard error of parameters
-                     via the compute_perr method""")
-            self.perr = self.compute_perr(
-                self.popt,
-                self.F,
-                self.Z,
-                self.Zerr_Re,
-                self.Zerr_Im,
-                self.lb_vec,
-                self.ub_vec,
-                self.smf,
-            )
-        else:
-            self.cov_mat = self.hess_inv * self.chitot
-            perr = torch.zeros(self.num_params, self.num_eis)
-            for i in range(self.num_params):
-                try:
-                    perr[i, :] = (torch.sqrt(torch.diag(self.cov_mat)))[
-                        self.kvals[i]:self.kvals[i + 1]
-                    ]
-                except ValueError:
-                    perr[i, :] = torch.ones(self.num_eis)
-
-            self.perr = perr * self.popt
-        self.chisqr = (
-            torch.mean(
-                _vmap(self.wrms_func, in_dims=(1, None, 1, 1, 1))(
-                    self.popt, self.F, self.Z, self.Zerr_Re, self.Zerr_Im
-                )
-            )
-        )
-        self.AIC = (
-            torch.mean(
-                _vmap(self.compute_aic, in_dims=(1, None, 1, 1, 1))(
-                    self.popt, self.F, self.Z, self.Zerr_Re, self.Zerr_Im
-                )
-            )
-        )
-        print("\nOptimization complete")
-        end = datetime.now()
-        print(f"total time is {end-start}", end=" ")
-        self.Z_exp = self.Z.clone()
-        self.Y_exp = 1 / self.Z_exp.clone()
-        self.Z_pred, self.Y_pred = self.model_prediction(self.popt, self.F)
-        self.indices = [i for i in range(self.Z_exp.shape[1])]
-        return self.popt, self.perr, self.chisqr, self.chitot, self.AIC
-
-    def fit_deterministic2(self,
-                           n_iter: int = 5000
-                           ) -> Tuple[
+    def fit_simultaneous(self,
+                         method: str = 'bfgs',
+                         n_iter: int = 5000,
+                         ) -> Tuple[
         torch.tensor, torch.tensor, torch.tensor, torch.tensor, torch.tensor
     ]:  # Optimal parameters, parameter error,
         # weighted residual mean square, and the AIC
 
         """
-        Fitting routine best used when the weighting is the standard deviation.
+        Simultaneous fitting routine with an arbitrary smoothing factor..
+
+        :params method: Solver to use (must be one of "'TNC', \
+                        'BFGS' or 'L-BFGS-B'")
 
         :params n_iter: Number of iterations
 
@@ -795,6 +711,9 @@ class Multieis:
                   the objective function at the minimum (chisqr), \
                   the total cost function (chitot) and the AIC
         """
+        self.method = method.lower()
+        assert (self.method in ['tnc', 'bfgs', 'l-bfgs-b']), ("method must be one of "
+                                                              "'TNC', 'BFGS' or 'L-BFGS-B'")
 
         if hasattr(self, "popt") and self.popt.shape[1] == self.Z.shape[1]:
 
@@ -806,18 +725,14 @@ class Multieis:
                 self.convert_to_internal(self.p0).type(torch.DoubleTensor)
             ).requires_grad_(True)
 
-        # Optimizer 1 uses the LBFGS algorithm
         start = datetime.now()
-        optimizer1 = ScipyMinimizer(
-            params=[self.par_log],
-            method="l-bfgs-b",
-            tol=1e-16,
-            options={"maxiter": n_iter},
+        optimizer = ScipyMinimizer(
+            params=[self.par_log], method=self.method, tol=1e-16, options={"maxiter": n_iter}
         )
         self.iteration = 0
 
-        def closure1():
-            optimizer1.zero_grad()
+        def closure():
+            optimizer.zero_grad()
             loss = self.cost_func(
                 self.par_log,
                 self.F,
@@ -829,78 +744,33 @@ class Multieis:
                 self.smf,
             )
             loss.backward()
-            self.iteration += 1
             print(
                 "\rIteration : {}, Loss : {:.5e}"
-                .format(self.iteration, loss.detach().clone()),
+                .format(self.iteration, loss.detach().clone()/self.dof),
                 end="",
             )
             if self.iteration % 1000 == 0:
                 print("")
-            return loss
-
-        optimizer1.step(closure1)
-        self.popt = self.convert_to_external(self.par_log).detach()
-        self.par_log = (
-            self.convert_to_internal(self.popt).type(torch.DoubleTensor)
-        ).requires_grad_(True)
-
-        # Optimizer 2 uses the BFGS algorithm
-        optimizer2 = Minimizer(
-            params=[self.par_log], method="bfgs", tol=1e-16, max_iter=n_iter
-        )
-        self.iteration = 0
-
-        def closure2():
-            optimizer2.zero_grad()
-            loss = self.cost_func(
-                self.par_log,
-                self.F,
-                self.Z,
-                self.Zerr_Re,
-                self.Zerr_Im,
-                self.lb_vec,
-                self.ub_vec,
-                self.smf,
-            )
             self.iteration += 1
             return loss
 
-        optimizer2.step(closure2)
+        optimizer.step(closure)
 
         self.popt = self.convert_to_external(self.par_log).detach()
-        self.chitot = torch.as_tensor(optimizer2._result.fun)
-        self.hess_inv = optimizer2._result.hess_inv
+        self.chitot = torch.as_tensor(optimizer._result.fun)/self.dof
+        self.hess_inv = torch.as_tensor(optimizer._result.hess_inv)
 
-        # Check if the hess_inv output from the optimizer is identity.
-        # If yes, use the compute_perr function
-        if torch.allclose(
-            self.hess_inv.type(torch.FloatTensor), torch.eye(len(self.par_log))
-        ):
-            print("""Computing standard error of parameters
-                     via the compute_perr method""")
-            self.perr = self.compute_perr(
-                self.popt,
-                self.F,
-                self.Z,
-                self.Zerr_Re,
-                self.Zerr_Im,
-                self.lb_vec,
-                self.ub_vec,
-                self.smf,
-            )
-        else:
-            self.cov_mat = self.hess_inv * self.chitot
-            perr = torch.zeros(self.num_params, self.num_eis)
-            for i in range(self.num_params):
-                try:
-                    perr[i, :] = (torch.sqrt(torch.diag(self.cov_mat)))[
-                        self.kvals[i]:self.kvals[i + 1]
-                    ]
-                except ValueError:
-                    perr[i, :] = torch.ones(self.num_eis)
+        self.perr = self.compute_perr(
+            self.popt,
+            self.F,
+            self.Z,
+            self.Zerr_Re,
+            self.Zerr_Im,
+            self.lb_vec,
+            self.ub_vec,
+            self.smf,
+        )
 
-            self.perr = perr * self.popt
         self.chisqr = torch.mean(
             _vmap(self.wrms_func, in_dims=(1, None, 1, 1, 1))(
                 self.popt, self.F, self.Z, self.Zerr_Re, self.Zerr_Im
@@ -980,7 +850,7 @@ class Multieis:
                     + str(epoch)
                     + ": "
                     + "loss="
-                    + "{:5.3e}".format(self.loss.detach().clone())
+                    + "{:5.3e}".format(self.loss.detach().clone()/self.dof)
                 )
             self.losses.append(self.loss.detach().clone())
             self.loss.backward()
@@ -996,38 +866,20 @@ class Multieis:
             self.ub_vec,
             self.smf,
         )
-        self.popt = self.convert_to_external(res.x).detach()
-        self.chitot = res.fun
-        self.hess_inv = res.hess_inv
-        # Check if the hess_inv output from the optimizer is identity.
-        # If yes, use the compute_perr function
-        if torch.allclose(
-            self.hess_inv.type(torch.FloatTensor), torch.eye(len(self.par_log))
-        ):
-            print("""Computing standard error of parameters
-                   via the compute_perr method""")
-            self.perr = self.compute_perr(
-                self.popt,
-                self.F,
-                self.Z,
-                self.Zerr_Re,
-                self.Zerr_Im,
-                self.lb_vec,
-                self.ub_vec,
-                self.smf,
-            )
-        else:
-            self.cov_mat = self.hess_inv * self.chitot
-            perr = torch.zeros(self.num_params, self.num_eis)
-            for i in range(self.num_params):
-                try:
-                    perr[i, :] = (torch.sqrt(torch.diag(self.cov_mat)))[
-                        self.kvals[i]:self.kvals[i + 1]
-                    ]
-                except ValueError:
-                    perr[i, :] = torch.ones(self.num_eis)
+        self.popt = self.convert_to_external(self.par_log).detach()
+        self.chitot = res.fun/self.dof
 
-            self.perr = perr * self.popt
+        self.perr = self.compute_perr(
+            self.popt,
+            self.F,
+            self.Z,
+            self.Zerr_Re,
+            self.Zerr_Im,
+            self.lb_vec,
+            self.ub_vec,
+            self.smf,
+        )
+
         self.chisqr = torch.mean(
             _vmap(self.wrms_func, in_dims=(1, None, 1, 1, 1))(
                 self.popt, self.F, self.Z, self.Zerr_Re, self.Zerr_Im
@@ -1048,13 +900,17 @@ class Multieis:
 
         return self.popt, self.perr, self.chisqr, self.chitot, self.AIC
 
-    def fit_refine(self,
-                   n_iter: int = 5000
-                   ) -> Tuple[
+    def fit_simultaneous_zero(self,
+                              method: str = 'bfgs',
+                              n_iter: int = 5000,
+                              ) -> Tuple[
         torch.tensor, torch.tensor, torch.tensor, torch.tensor, torch.tensor
     ]:
         """
-        Fitting routine with the smoothing factor set to 1.
+        Fitting routine with the smoothing factor set to zero.
+
+        :params method: Solver to use (must be one of "'TNC', \
+                        'BFGS' or 'L-BFGS-B'")
 
         :param n_iter: Number of iterations
 
@@ -1063,6 +919,9 @@ class Multieis:
                   the objective function at the minimum (chisqr), \
                   the total cost function (chitot) and the AIC
         """
+        self.method = method.lower()
+        assert (self.method in ['tnc', 'bfgs', 'l-bfgs-b']), ("method must be one of "
+                                                              "'TNC', 'BFGS' or 'L-BFGS-B'")
 
         if hasattr(self, "popt") and self.popt.shape[1] == self.Z.shape[1]:
 
@@ -1077,7 +936,7 @@ class Multieis:
         start = datetime.now()
         optimizer = ScipyMinimizer(
             params=[self.par_log],
-            method="l-bfgs-b",
+            method=self.method,
             tol=1e-16,
             options={"maxiter": n_iter},
         )
@@ -1093,13 +952,13 @@ class Multieis:
                 self.Zerr_Im,
                 self.lb_vec,
                 self.ub_vec,
-                torch.ones(self.num_params),
+                torch.zeros(self.num_params),
             )
             loss.backward()
             self.iteration += 1
             print(
                 "\rIteration : {}, Loss : {:.5e}"
-                .format(self.iteration, loss.item()),
+                .format(self.iteration, loss.item()/self.dof),
                 end=""
             )
             if self.iteration % 1000 == 0:
@@ -1108,38 +967,16 @@ class Multieis:
 
         optimizer.step(closure)
         self.popt = self.convert_to_external(self.par_log).detach()
-        self.hess_inv = torch.tensor(optimizer._result.hess_inv.todense())
-        self.chitot = optimizer._result.fun
+        self.chitot = torch.as_tensor(optimizer._result.fun)/self.dof
 
-        # Check if the hess_inv output from the optimizer is identity.
-        # If yes, use the compute_perr function
-        if torch.allclose(
-            self.hess_inv.type(torch.FloatTensor), torch.eye(len(self.par_log))
-        ):
-            print("""Computing standard error of parameters
-                     via the compute_perr method""")
-            self.perr = self.compute_perr(
-                self.popt,
-                self.F,
-                self.Z,
-                self.Zerr_Re,
-                self.Zerr_Im,
-                self.lb_vec,
-                self.ub_vec,
-                self.smf,
-            )
-        else:
-            self.cov_mat = self.hess_inv * self.chitot
-            perr = torch.zeros(self.num_params, self.num_eis)
-            for i in range(self.num_params):
-                try:
-                    perr[i, :] = (torch.sqrt(torch.diag(self.cov_mat)))[
-                        self.kvals[i]:self.kvals[i + 1]
-                    ]
-                except ValueError:
-                    perr[i, :] = torch.ones(self.num_eis)
+        self.perr = self.compute_perr_QR(
+            self.popt,
+            self.F,
+            self.Z,
+            self.Zerr_Re,
+            self.Zerr_Im,
+        )
 
-            self.perr = perr * self.popt
         self.chisqr = (
             torch.mean(
                 _vmap(self.wrms_func, in_dims=(1, None, 1, 1, 1))(
@@ -1239,7 +1076,7 @@ class Multieis:
 
             popt[:, i] = self.decode(pfit, self.lb, self.ub).detach()
             chisqr[i] = (
-                torch.sum(chi2**2) / (2 * self.num_freq - self.num_params)
+                torch.sum((2*chi2)**2) / (2 * self.num_freq - self.num_params)
                 if torch.is_tensor(chi2)
                 else torch.sum(torch.tensor(chi2**2))
                 / (2 * self.num_freq - self.num_params)
@@ -1310,8 +1147,9 @@ class Multieis:
 
     def compute_perr_mc(self,
                         n_boots: int = 500
-                        ) -> torch.tensor:
-
+                        ) -> Tuple[
+        torch.tensor, torch.tensor, torch.tensor, torch.tensor, torch.tensor
+    ]:
         """
         The bootstrap approach used here is \
         similar to the fixed-X resampling. \
@@ -1324,13 +1162,18 @@ class Multieis:
 
         :param n_boots: Number of bootstrap samples
 
-        :returns: A 2-D tensor containing the \
-                  estimated parameter standard deviation
+        :returns: A tuple containing the optimal parameters (popt), \
+                  the standard error of the parameters (perr), \
+                  the objective function at the minimum (chisqr), \
+                  the total cost function (chitot) and the AIC
         """
+        print("""\nPlease run fit_simultaneous() or fit_stochastic()
+              on your data before running the compute_perr_mc() method.
+              ignore this message if you did.""")
 
         if hasattr(self, "popt") and self.popt.shape[1] == self.Z.shape[1]:
 
-            self.par_log = (
+            par_log = (
                 self.convert_to_internal(self.popt).type(torch.DoubleTensor)
             ).requires_grad_(True)
         else:
@@ -1384,8 +1227,8 @@ class Multieis:
 
         # Here we loop through the number of boots and
         # run the minimization algorithm using the do_minimize function
+        par_log_mc = par_log.clone()
         for i in range(self.n_boots):
-            par_log_mc = self.convert_to_internal(self.p0).requires_grad_(True)
             sidx = np.random.choice(idx, replace=True, size=self.num_freq)
             rnd_resid_Re_boot = rnd_resid_Re[sidx, :]
             rnd_resid_Im_boot = rnd_resid_Im[sidx, :]
@@ -1410,10 +1253,13 @@ class Multieis:
             self.popt_mc[i, :, :] = (
                 self.convert_to_external(popt_log_mc[i, :])
             ).detach()
-            self.chisqr_mc[i] = res.fun
+            self.chisqr_mc[i] = res.fun/self.dof
             self.Z_pred_mc_tot[i, :, :] = Z_pred_mc
+        self.popt = self.popt.clone()
         self.perr = torch.std(self.popt_mc, unbiased=False, dim=0)
-        return self.perr
+        self.chisqr = torch.mean.mean(self.chisqr_mc, dim=0)
+        self.chitot = self.chisqr.clone()
+        return self.popt, self.perr, self.chisqr, self.chitot, self.AIC
 
     def do_minimize(self,
                     p: torch.tensor,
@@ -2390,7 +2236,7 @@ class Multieis:
             results_path = os.path.join(os.path.abspath(os.getcwd()), fname)
             results_folder = os.path.join(results_path, "results")
             self.create_dir(results_folder)
-            path_name = os.path.join(results_folder, "fit")
+            path_name = os.path.join(results_folder, fname)
 
         else:
             raise TypeError(

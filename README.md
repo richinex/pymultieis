@@ -28,7 +28,7 @@ fitting your data with ``pymultieis``.
 Dependencies
 **************
 
-impedance.py requires:
+pymultieis requires:
 
 -   Python (>=3.9)
 -   torch (>=1.12.1)
