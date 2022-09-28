@@ -783,7 +783,7 @@ class Multieis:
         )
         print("\nOptimization complete")
         end = datetime.now()
-        print(f"total time is {end-start}", end=" ")
+        print(f"total time is {end-start}\n", end=" ")
         self.Z_exp = self.Z.clone()
         self.Y_exp = 1 / self.Z_exp.clone()
         self.Z_pred, self.Y_pred = self.model_prediction(self.popt, self.F)
@@ -1043,7 +1043,10 @@ class Multieis:
         aic = torch.zeros(self.n_fits)
         start = datetime.now()
         for i, val in enumerate(self.indices):
-            print(f"fitting spectra {val}")
+            if i % 10 == 0:
+                print(
+                    f"fitting spectra {val}"
+                )
             try:
                 pfit, chi2 = self.do_minimize_ls(
                     params_init[:, val],
@@ -1219,6 +1222,7 @@ class Multieis:
 
         # Here we loop through the number of boots and
         # run the minimization algorithm using the do_minimize function
+        start = datetime.now()
         par_log_mc = par_log.clone()
         for i in range(self.n_boots):
             sidx = np.random.choice(idx, replace=True, size=self.num_freq)
@@ -1249,8 +1253,11 @@ class Multieis:
             self.Z_pred_mc_tot[i, :, :] = Z_pred_mc
         self.popt = self.popt.clone()
         self.perr = torch.std(self.popt_mc, unbiased=False, dim=0)
-        self.chisqr = torch.mean.mean(self.chisqr_mc, dim=0)
+        self.chisqr = torch.mean(self.chisqr_mc, dim=0)
         self.chitot = self.chisqr.clone()
+        print("\nOptimization complete")
+        end = datetime.now()
+        print(f"total time is {end-start}", end=" ")
         return self.popt, self.perr, self.chisqr, self.chitot, self.AIC
 
     def do_minimize(self,
