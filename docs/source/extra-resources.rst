@@ -22,9 +22,8 @@ Or
 .. math::
     Z_{W} = \sqrt{\frac{R_d}{s C_d}} (\sqrt{R_{d}~sC_{d}})
 
-Where :math:`s = j \omega` and :math:`\sigma` has units of :math:`\Omega s^{-0.5}`,
-:math:`R` has units of Ohms (:math:`\Omega`) and :math:`C` has units of Farads (:math:`F`).
-
+Where :math:`s = j \omega` with :math:`j` being the imaginary unit and :math:`\omega` the angular frequency.
+:math:`A_{W} has units of :math:`\Omega s^{-0.5}`, :math:`R` has units of Ohms (:math:`\Omega`) and :math:`C` has units of Farads (:math:`F`).
 And
 
 .. math::
@@ -47,13 +46,13 @@ Finite length diffusion with reflective boundary
 Describes the reaction of mobile active species distributed in a layer with finite length,
 terminated by an impermeable boundary.
 
-.. math::
-    Z_{Wo} = \sqrt{\frac{R_d}{s C_d}} \coth(\sqrt{R_{d}~sC_{d}})
+.. math:: Z_{Wo} = \sqrt{\frac{R_d}{s C_d}} \coth(\sqrt{R_{d}~sC_{d}})
+    :label: ZWo
 
 Or
 
 .. math:: Z_{Wo} = R \frac{coth(j \omega \tau)^{\phi}}{(j \omega \tau)_{\phi}}
-    :label: ZWo
+
 
 
 Where :math:`\phi` = 0.5
@@ -71,13 +70,15 @@ Finite length diffusion with transmissive boundary
 Describes the reaction of mobile active species distributed in a layer with finite length,
 terminated by an impermeable boundary.
 
-.. math::
-    Z_{Ws} = \sqrt{\frac{R_d}{s C_d}} \tanh(\sqrt{R_{d}~sC_{d}})
-
-
-.. math:: Z_{Ws} = R \frac{tanh(j \omega \tau)^{\phi}}{(j \omega \tau)_{\phi}}
+.. math:: Z_{Ws} = \sqrt{\frac{R_d}{s C_d}} \tanh(\sqrt{R_{d}~sC_{d}})
     :label: ZWs
 
+Or
+
+.. math:: Z_{Ws} = R \frac{tanh(j \omega \tau)^{\phi}}{(j \omega \tau)_{\phi}}
+
+
+Where :math:`\phi` = 0.5
 
 .. code-block:: python
 
@@ -85,4 +86,4 @@ terminated by an impermeable boundary.
   s = 1j * w
   ZWs = torch.sqrt(Rd/s*Cd) * torch.tanh(torch.sqrt(Rd * s*Cd))
 
-Where :math:`\phi` = 0.5
+
