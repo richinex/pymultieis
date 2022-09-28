@@ -18,7 +18,7 @@ A library for fitting a sequence of electrochemical impedance spectra.
 
 - Written in python and based on the [PyTorch](https://pytorch.org/) library.
 
-- Leverages deterministic solvers from [pytorch-minimize](https://pytorch-minimize.readthedocs.io/en/latest/api/index.html) which computes the first- and second-order derivatives via autograd.
+- Leverages deterministic solvers from [pytorch-minimize](https://pytorch-minimize.readthedocs.io/en/latest/api/index.html) which compute the first- and second-order derivatives via autograd.
 
 ## Installation<a id="installation"></a>
 
