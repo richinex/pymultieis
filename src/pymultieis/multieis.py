@@ -716,11 +716,12 @@ class Multieis:
                                                               "'TNC', 'BFGS' or 'L-BFGS-B'")
 
         if hasattr(self, "popt") and self.popt.shape[1] == self.Z.shape[1]:
-
+            print("\nUsing prefit")
             self.par_log = (
                 self.convert_to_internal(self.popt).type(torch.DoubleTensor)
             ).requires_grad_(True)
         else:
+            print("\nUsing initial")
             self.par_log = (
                 self.convert_to_internal(self.p0).type(torch.DoubleTensor)
             ).requires_grad_(True)
@@ -758,7 +759,6 @@ class Multieis:
 
         self.popt = self.convert_to_external(self.par_log).detach()
         self.chitot = torch.as_tensor(optimizer._result.fun)/self.dof
-        self.hess_inv = torch.as_tensor(optimizer._result.hess_inv)
 
         self.perr = self.compute_perr(
             self.popt,
@@ -817,11 +817,12 @@ class Multieis:
         self.num_epochs = int(num_epochs)
 
         if hasattr(self, "popt") and self.popt.shape[1] == self.Z.shape[1]:
-
+            print("\nUsing prefit")
             self.par_log = (
                 self.convert_to_internal(self.popt).type(torch.DoubleTensor)
             ).requires_grad_(True)
         else:
+            print("\nUsing initial")
             self.par_log = (
                 self.convert_to_internal(self.p0).type(torch.DoubleTensor)
             ).requires_grad_(True)
@@ -852,22 +853,12 @@ class Multieis:
                     + "loss="
                     + "{:5.3e}".format(self.loss.detach().clone()/self.dof)
                 )
-            self.losses.append(self.loss.detach().clone())
+            self.losses.append(self.loss.detach().clone()/self.dof)
             self.loss.backward()
             optimizer.step()
 
-        res = self.do_minimize(
-            self.par_log,
-            self.F,
-            self.Z,
-            self.Zerr_Re,
-            self.Zerr_Im,
-            self.lb_vec,
-            self.ub_vec,
-            self.smf,
-        )
         self.popt = self.convert_to_external(self.par_log).detach()
-        self.chitot = res.fun/self.dof
+        self.chitot = self.losses[-1]
 
         self.perr = self.compute_perr(
             self.popt,
@@ -924,11 +915,12 @@ class Multieis:
                                                               "'TNC', 'BFGS' or 'L-BFGS-B'")
 
         if hasattr(self, "popt") and self.popt.shape[1] == self.Z.shape[1]:
-
+            print("\nUsing prefit")
             self.par_log = (
                 self.convert_to_internal(self.popt).type(torch.DoubleTensor)
             ).requires_grad_(True)
         else:
+            print("\nUsing initial")
             self.par_log = (
                 self.convert_to_internal(self.p0).type(torch.DoubleTensor)
             ).requires_grad_(True)
@@ -1172,7 +1164,7 @@ class Multieis:
               ignore this message if you did.""")
 
         if hasattr(self, "popt") and self.popt.shape[1] == self.Z.shape[1]:
-
+            print("\nUsing prefit")
             par_log = (
                 self.convert_to_internal(self.popt).type(torch.DoubleTensor)
             ).requires_grad_(True)
