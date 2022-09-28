@@ -728,8 +728,11 @@ class Multieis:
 
         start = datetime.now()
         optimizer = ScipyMinimizer(
-            params=[self.par_log], method=self.method, tol=1e-16, options={"maxiter": n_iter}
-        )
+            params=[self.par_log],
+            method=self.method,
+            tol=1e-16,
+            options={"maxfun" if self.method == "tnc" else "maxiter": n_iter}
+            )
         self.iteration = 0
 
         def closure():
@@ -930,7 +933,7 @@ class Multieis:
             params=[self.par_log],
             method=self.method,
             tol=1e-16,
-            options={"maxiter": n_iter},
+            options={"maxfun" if self.method == "tnc" else "maxiter": n_iter},
         )
         self.iteration = 0
 
