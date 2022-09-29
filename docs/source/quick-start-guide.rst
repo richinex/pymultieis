@@ -80,9 +80,7 @@ We assume that we have our files in the data folder one step above working direc
   torch.Size([45, 50])
 
 .. important::
-  :code:`pymultieis` does not offer a preprocessing module since other packages offer this feature.
-  For instance files from different vendors (ZPlot, Gamry, Parstat, Autolab) can be read using the
-  `preprocessing module` offered by `impedancepy <https://impedancepy.readthedocs.io/en/latest/preprocessing.html>`_
+  :code:`pymultieis` does not offer a module to parse files. However this can easily be done using ``Pandas`` and other available libraries.
 
 Step 3: Define your impedance/admittance model
 ===================================================
