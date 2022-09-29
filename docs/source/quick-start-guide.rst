@@ -175,8 +175,9 @@ and the :code:`immittance` we are modeling which in this case is the admittance.
 
    The details of the computation of the standard deviation of the admittance used in this guide is given
    in this `paper <https://doi.org/10.1002/celc.202200109>`_.
-   Methods for obtaining the standard deviation of impedance measurements are briefly described under the :ref:`FAQ-label` section.
+   Other methods for obtaining the standard deviation of impedance measurements are briefly described under the :ref:`FAQ-label` section.
 
+To fit using a different weighting scheme, all we need to is replace the weight argument ``Yerr`` with the string "modulus", "proportional" or None(i.e unit).
 
 Step 5: Fit the model to data
 =======================================
