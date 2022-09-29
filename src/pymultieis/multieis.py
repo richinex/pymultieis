@@ -610,10 +610,10 @@ class Multieis:
             wrms = self.wrms_func(P[:, i], X, Z[:, i], Zerr_Re[:, i], Zerr_Im[:, i])
             gradsre = grad_func(P[:, i], X)[:self.num_freq]
             gradsim = grad_func(P[:, i], X)[self.num_freq:]
-            rtwre = torch.diag((1/Zerr_Re[:, i]))
-            rtwim = torch.diag((1/Zerr_Im[:, i]))
-            vre = rtwre.double()@gradsre.double()
-            vim = rtwim.double()@gradsim.double()
+            diag_wtre_matrix = torch.diag((1/Zerr_Re[:, i]))
+            diag_wtim_matrix = torch.diag((1/Zerr_Im[:, i]))
+            vre = diag_wtre_matrix.double()@gradsre.double()
+            vim = diag_wtim_matrix.double()@gradsim.double()
             Q1, R1 = torch.linalg.qr(torch.cat([vre , vim], dim=0))
             try:
                 # Here we check to see if the Hessian matrix is singular or
@@ -1111,10 +1111,10 @@ class Multieis:
                 )[0]
                 gradsre = grads[:self.num_freq]
                 gradsim = grads[self.num_freq:]
-                rtwre = torch.diag((1 / self.Zerr_Re[:, val]))
-                rtwim = torch.diag((1 / self.Zerr_Im[:, val]))
-                vre = rtwre.double() @ gradsre.double()
-                vim = rtwim.double() @ gradsim.double()
+                diag_wtre_matrix = torch.diag((1 / self.Zerr_Re[:, val]))
+                diag_wtim_matrix = torch.diag((1 / self.Zerr_Im[:, val]))
+                vre = diag_wtre_matrix.double() @ gradsre.double()
+                vim = diag_wtim_matrix.double() @ gradsim.double()
                 Q1, R1 = torch.linalg.qr(torch.cat([vre, vim], dim=0))
                 try:
                     invR1 = torch.linalg.inv(R1)
