@@ -438,14 +438,11 @@ class Multieis:
 
         :returns: A scalar value of the weighted residual mean square
         """
-        n_data = len(f)
-        n_par = len(p)
-        dof = 2 * n_data - (n_par)
         z_concat = torch.cat([z.real, z.imag], dim=0)
         sigma = torch.cat([zerr_re, zerr_im], dim=0)
         z_model = self.func(p, f)
         wrss = torch.linalg.vector_norm(((z_concat - z_model) / sigma)) ** 2
-        wrms = wrss / dof
+        wrms = wrss / (2 * len(f) - len(p))
         return wrms
 
     def compute_perr(self,
@@ -500,16 +497,16 @@ class Multieis:
             # confidence intervals close to impossible.
             hess_inv = torch.linalg.inv(hess_mat)
         except torch.linalg.LinAlgError:
-            hess_inv = torch.ones(len(P_log))
+            hess_inv = torch.linalg.pinv(hess_mat)
 
         # The covariance matrix of the parameter estimates
         # is (asymptotically) the inverse of the hessian matrix
         cov_mat = hess_inv * chitot
+        std_error = torch.sqrt(torch.diag(cov_mat))
         perr = torch.zeros(self.num_params, self.num_eis)
         for i in range(self.num_params):
-            perr[i, :] = (torch.sqrt(torch.diag(cov_mat)))[
-                self.kvals[i]:self.kvals[i + 1]
-            ]
+            perr[i, :] = std_error[self.kvals[i]:self.kvals[i + 1]]
+
         perr = perr.detach().clone() * P
         # if the error is nan, a value of 1 is assigned.
         return torch.nan_to_num(perr, nan=1.0e15)
@@ -602,6 +599,10 @@ class Multieis:
 
         :returns: A 2D tensor of the standard error on the parameters
 
+        Ref
+        ----
+        Bates, D. M., Watts, D. G. (1988). Nonlinear regression analysis \
+        and its applications. New York [u.a.]: Wiley. ISBN: 0471816434
         """
         def grad_func(p, f):
             return torch.autograd.functional.jacobian(self.func, (p, f))[0]
@@ -622,7 +623,7 @@ class Multieis:
                 invR1 = torch.linalg.inv(R1)
             except torch.linalg.LinAlgError:
                 print(f"\nHessian Matrix is singular for spectra {i}")
-                invR1 = torch.ones(size=(self.num_params, self.num_params))
+                invR1 = torch.linalg.pinv(R1)
 
             perr[:, i] = torch.linalg.vector_norm(invR1, dim=1)*torch.sqrt(wrms)
         # if the error is nan, a value of 1 is assigned.
@@ -718,7 +719,7 @@ class Multieis:
         if hasattr(self, "popt") and self.popt.shape[1] == self.Z.shape[1]:
             print("\nUsing prefit")
             self.par_log = (
-                self.convert_to_internal(self.popt).type(torch.DoubleTensor)
+                self.convert_to_internal(self.check_nan_values(self.popt)).type(torch.DoubleTensor)
             ).requires_grad_(True)
         else:
             print("\nUsing initial")
@@ -822,7 +823,7 @@ class Multieis:
         if hasattr(self, "popt") and self.popt.shape[1] == self.Z.shape[1]:
             print("\nUsing prefit")
             self.par_log = (
-                self.convert_to_internal(self.popt).type(torch.DoubleTensor)
+                self.convert_to_internal(self.check_nan_values(self.popt)).type(torch.DoubleTensor)
             ).requires_grad_(True)
         else:
             print("\nUsing initial")
@@ -920,7 +921,7 @@ class Multieis:
         if hasattr(self, "popt") and self.popt.shape[1] == self.Z.shape[1]:
             print("\nUsing prefit")
             self.par_log = (
-                self.convert_to_internal(self.popt).type(torch.DoubleTensor)
+                self.convert_to_internal(self.check_nan_values(self.popt)).type(torch.DoubleTensor)
             ).requires_grad_(True)
         else:
             print("\nUsing initial")
@@ -1030,10 +1031,11 @@ class Multieis:
             Please choose the index or indices of spectra to fit""")
 
         if hasattr(self, "popt") and self.popt.shape[1] == self.Z.shape[1]:
-
+            print("\nUsing prefit")
             self.par_log = \
-                self.convert_to_internal(self.popt).type(torch.DoubleTensor)
+                self.convert_to_internal(self.check_nan_values(self.popt)).type(torch.DoubleTensor)
         else:
+            print("\nUsing initial")
             self.par_log = \
                 self.convert_to_internal(self.p0).type(torch.DoubleTensor)
 
@@ -1128,7 +1130,11 @@ class Multieis:
                         perr will be assigned a value of ones"""
                         .format(val)
                     )
-                    perr[:, i] = torch.ones(self.num_params)
+                    invR1 = torch.linalg.inv(R1)
+                    perr[:, i] = \
+                        torch.linalg.vector_norm(invR1, dim=1) * torch.sqrt(
+                        chisqr[i]
+                    )
 
         self.popt = popt.clone()
         self.perr = torch.nan_to_num(perr.clone(), nan=1.0e15)
@@ -1172,7 +1178,7 @@ class Multieis:
         if hasattr(self, "popt") and self.popt.shape[1] == self.Z.shape[1]:
             print("\nUsing prefit")
             par_log = (
-                self.convert_to_internal(self.popt).type(torch.DoubleTensor)
+                self.convert_to_internal(self.check_nan_values(self.popt)).type(torch.DoubleTensor)
             ).requires_grad_(True)
         else:
             raise ValueError(
@@ -2137,17 +2143,19 @@ class Multieis:
             raise AttributeError("A fit() method has not been called.")
         else:
 
-            self.param_idx = [str(i) for i in self.indices]
+            self.param_idx = [int(i) for i in self.indices]
             params_df = pd.DataFrame(
                 self.popt.T.numpy(),
-                columns=[str(i) for i in range(self.num_params)]
+                columns=[i for i in range(self.num_params)]
                 )
-            params_df["Idx"] = self.param_idx
+            params_df['Idx'] = self.param_idx
+            params_df['Idx'] = params_df["Idx"].astype('category')
+            self.params_df = params_df.fillna(0)
             if self.show_errorbar is True:
                 # Plot with error bars
                 self.fig_params = (
-                    params_df.plot(
-                        x="Idx",
+                    self.params_df.plot(
+                        x='Idx',
                         marker="o",
                         linestyle="--",
                         subplots=True,
@@ -2163,8 +2171,8 @@ class Multieis:
             else:
                 # Plot without error bars
                 self.fig_params = (
-                    params_df.plot(
-                        x="Idx",
+                    self.params_df.plot(
+                        x='Idx',
                         marker="o",
                         linestyle="--",
                         subplots=True,
@@ -2350,7 +2358,7 @@ class Multieis:
             self.img_path_name = self.get_img_path(fname)
             try:
                 self.plot_params(
-                    show_errorbar=True,
+                    show_errorbar=show_errorbar,
                     labels=self.labels,
                     fpath=self.img_path_name + "_params" + ".png"
                 )
