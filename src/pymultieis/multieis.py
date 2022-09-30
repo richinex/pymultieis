@@ -512,7 +512,7 @@ class Multieis:
             ]
         perr = perr.detach().clone() * P
         # if the error is nan, a value of 1 is assigned.
-        return torch.nan_to_num(perr, nan=1.0)
+        return torch.nan_to_num(perr, nan=1.0e15)
 
     def cost_func(self,
                   P: torch.tensor,
@@ -626,7 +626,7 @@ class Multieis:
 
             perr[:, i] = torch.linalg.vector_norm(invR1, dim=1)*torch.sqrt(wrms)
         # if the error is nan, a value of 1 is assigned.
-        return torch.nan_to_num(perr, nan=1.0)
+        return torch.nan_to_num(perr, nan=1.0e15)
 
     def compute_aic(self,
                     p: torch.tensor,
@@ -1131,7 +1131,7 @@ class Multieis:
                     perr[:, i] = torch.ones(self.num_params)
 
         self.popt = popt.clone()
-        self.perr = perr.clone()
+        self.perr = torch.nan_to_num(perr.clone(), nan=1.0e15)
         self.chisqr = torch.mean(chisqr)
         self.chitot = self.chisqr.clone()
         self.AIC = torch.mean(aic)
