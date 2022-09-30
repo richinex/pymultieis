@@ -9,7 +9,7 @@ pymultieis
 [**Installation**](#installation)
 | [**Examples**](https://github.com/richinex/pymultieis/tree/main/docs/source/examples)
 | [**Documentation**](https://pymultieis.readthedocs.io/en/latest/index.html)
-| [**References**](#references)
+| [**Citing this work**](#citation)
 
 
 A library for fitting a sequence of electrochemical impedance spectra.
@@ -52,4 +52,16 @@ Detailed tutorials on other aspects of ``pymultieis`` can be found in [Examples]
 Details about the ``pymultieis`` API, can be found in the [reference documentation](https://pymultieis.readthedocs.io/en/latest/index.html).
 
 
-## References
+## Citing this work<a id="citation"></a>
+
+If you use pymultieis for academic research, you may cite the library as follows:
+
+```
+@misc{Chukwu2021,
+  author = {Chukwu, Richard},
+  title = {pymultieis: a library for fitting a sequence of electrochemical impedance spectra},
+  publisher = {GitHub},
+  year = {2022},
+  url = {https://github.com/richinex/pymultieis},
+}
+```
