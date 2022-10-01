@@ -1,8 +1,26 @@
 [tool.poetry]
 name = "pymultieis"
 version = "0.1.0"
-description = ""
+description="A library for fitting a sequence of electrochemical impedance spectra."
 authors = ["Richard Chukwu <richinex@gmail.com>"]
+license="MIT"
+maintainers = [
+    "Richard Chukwu <richinex@gmail.com>"
+]
+readme = "README.md"
+homepage = "https://github.com/richinex/pymultieis"
+repository = "https://github.com/richinex/pymultieis"
+documentation = "https://pymultieis.readthedocs.io/en/latest/index.html"
+keywords = ["electrochemical impedance spectroscopy, batch fitting, multiple spectra, torch"]
+classifiers=[
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Operating System :: OS Independent",
+]
+
 
 [tool.poetry.dependencies]
 python = "~3.9"
@@ -11,7 +29,6 @@ scipy = "^1.9.1"
 torch = "^1.12.1"
 matplotlib = "3.5"
 numpy = "1.23.1"
-sphinxemoji = "^0.2.0"
 pytorch-minimize = "^0.0.2"
 
 [tool.poetry.dev-dependencies]
@@ -23,6 +40,7 @@ sphinxcontrib-napoleon = "^0.7"
 ipykernel = "^6.15.3"
 flake8 = "^5.0.4"
 pre-commit = "^2.20.0"
+sphinxemoji = "^0.2.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
