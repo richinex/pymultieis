@@ -1,10 +1,5 @@
-<div align="center">
-<img src="https://github.com/richinex/pymultieis/blob/main/docs/source/_static/z_bode.png" alt="logo"></img>
-</div>
 
-
-pymultieis
-=============
+# pymultieis
 
 [**Installation**](#installation)
 | [**Examples**](https://github.com/richinex/pymultieis/tree/main/docs/source/examples)
@@ -22,20 +17,9 @@ A library for fitting a sequence of electrochemical impedance spectra.
 
 ## Installation<a id="installation"></a>
 
-pymultieis requires the following:
+Installation of pymultieis should be done via pip:
 
--   Python (>=3.9)
--   [torch](https://pytorch.org/get-started/locally/) (>=1.12.1)
--   [pytorch-minimize](https://pytorch-minimize.readthedocs.io/en/latest/install.html)
--   Matplotlib (>=3.6.0)
--   NumPy (>=1.23.3)
--   Pandas (>=1.4.4)
--   SciPy (>=1.9.1)
-
-
-After installing the dependencies, you can now install pymultieis via the following pip command
-
-```
+```bash
 pip install pymultieis
 ```
 
@@ -45,7 +29,7 @@ fitting your data with ``pymultieis``.
 
 ## Examples
 
-Detailed tutorials on other aspects of ``pymultieis`` can be found in [Examples](https://github.com/richinex/pymultieis/tree/main/docs/source/examples).
+Jupyter notebooks which cover several aspects of ``pymultieis`` can be found in [Examples](https://github.com/richinex/pymultieis/tree/main/docs/source/examples).
 
 ## Documentation
 
@@ -57,7 +41,7 @@ Details about the ``pymultieis`` API, can be found in the [reference documentati
 If you use pymultieis for academic research, you may cite the library as follows:
 
 ```
-@misc{Chukwu2021,
+@misc{Chukwu2022,
   author = {Chukwu, Richard},
   title = {pymultieis: a library for fitting a sequence of electrochemical impedance spectra},
   publisher = {GitHub},
