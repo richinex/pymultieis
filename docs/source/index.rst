@@ -65,7 +65,7 @@ The documentation can be found at
    quick-start-guide
    pymultieis
    examples
-   batch-fit-vs-sequential-fit
+   simultaneous-vs-sequential-fit
    how-it-works
    troubleshooting
    extra-resources
