@@ -11,7 +11,7 @@ readme = "README.md"
 homepage = "https://github.com/richinex/pymultieis"
 repository = "https://github.com/richinex/pymultieis"
 documentation = "https://pymultieis.readthedocs.io/en/latest/index.html"
-keywords = ["electrochemical impedance spectroscopy, batch fitting, multiple spectra, torch"]
+keywords = ["electrochemical impedance spectroscopy, eis, batch fitting, multiple spectra, torch"]
 classifiers=[
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
