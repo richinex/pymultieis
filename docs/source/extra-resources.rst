@@ -15,7 +15,6 @@ Describes linear diffusion from a medium with lebgth which can be approximated
 as infinite.
 
 .. math:: Z_{W} = \frac{A_W}{\sqrt{w}}(1-j)
-    :label: ZW
 
 Or
 
@@ -47,7 +46,6 @@ Describes the reaction of mobile active species distributed in a layer with fini
 terminated by an impermeable boundary.
 
 .. math:: Z_{Wo} = \sqrt{\frac{R_d}{s C_d}} \coth(\sqrt{R_{d}~sC_{d}})
-    :label: ZWo
 
 Or
 
@@ -71,7 +69,6 @@ Describes the reaction of mobile active species distributed in a layer with fini
 terminated by an impermeable boundary.
 
 .. math:: Z_{Ws} = \sqrt{\frac{R_d}{s C_d}} \tanh(\sqrt{R_{d}~sC_{d}})
-    :label: ZWs
 
 Or
 
@@ -89,3 +86,24 @@ Where :math:`\phi` = 0.5
 
 Resources on the web
 ===================================================
+1. `Research Solutions and Resources LLC <http://www.consultrsr.net/resources/eis/>`_ has a section on electrochemical impedance spectroscopy (EIS)
+which explains several concepts related to the study of impedance such as fitting equivalent circuits to EIS data, the constant phase element (CPE),
+diffusion, porous electrodes to mention a few. There are also links to several other resources.
+
+2. `Matt Lacey's website <http://lacey.se/science/eis/diffusion-impedance/>`_ provides an excellent description of diffusion impedance.
+
+Books
+===========
+
+1. `Electrochemical Impedance Spectroscopy <https://www.wiley.com/en-us/Electrochemical+Impedance+Spectroscopy,+2nd+Edition-p-9781118527399>`_ by Mark Orazem and Bernard Tribollet
+
+2. `Electrochemical Impedance Spectroscopy and its Applications <https://link.springer.com/book/10.1007/978-1-4614-8933-7>`_ by Andrzej Lasia
+
+Videos
+========
+
+1. Sam Cooper's `Introduction to Electrochemical Impedance Spectroscopy (EIS: Maths and Theory) <https://www.youtube.com/watch?v=5puDQjCl2pk>`_
+
+2. S. Ramanathan's `NPTEL-NOC IITM lectures <https://www.youtube.com/watch?v=_bRI2bv_YqY&list=PLyqSpQzTE6M9ftJKyUWBilfrgBjh_6eh1>`_
+
+3. Across the Nanoverse's `Introduction to EIS <https://www.youtube.com/watch?v=xaimI9w-egQ>`_
