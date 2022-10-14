@@ -341,13 +341,13 @@ class Multieis:
             )
         return par_ext
 
-    def wrss_func(self,
-                  p: torch.tensor,
-                  f: torch.tensor,
-                  z: torch.tensor,
-                  zerr_re: torch.tensor,
-                  zerr_im: torch.tensor
-                  ) -> torch.tensor:
+    def compute_wrss(self,
+                     p: torch.tensor,
+                     f: torch.tensor,
+                     z: torch.tensor,
+                     zerr_re: torch.tensor,
+                     zerr_im: torch.tensor
+                     ) -> torch.tensor:
 
         """
         Computes the scalar weighted residual sum of squares \
@@ -375,15 +375,15 @@ class Multieis:
         wrss = torch.linalg.vector_norm(((z_concat - z_model) / sigma)) ** 2
         return wrss
 
-    def wrss_func_ls(self,
-                     p: torch.tensor,
-                     f: torch.tensor,
-                     z: torch.tensor,
-                     zerr_re: torch.tensor,
-                     zerr_im: torch.tensor,
-                     lb,
-                     ub
-                     ) -> torch.tensor:
+    def compute_rss(self,
+                    p: torch.tensor,
+                    f: torch.tensor,
+                    z: torch.tensor,
+                    zerr_re: torch.tensor,
+                    zerr_im: torch.tensor,
+                    lb,
+                    ub
+                    ) -> torch.tensor:
         """
         Computes the vector of weighted residuals. \
         This is the objective function passed to the least squares solver.
@@ -414,13 +414,13 @@ class Multieis:
         residuals = 0.5 * ((z_concat - z_model) / sigma)
         return residuals
 
-    def wrms_func(self,
-                  p: torch.tensor,
-                  f: torch.tensor,
-                  z: torch.tensor,
-                  zerr_re: torch.tensor,
-                  zerr_im: torch.tensor
-                  ) -> torch.tensor:
+    def compute_wrms(self,
+                     p: torch.tensor,
+                     f: torch.tensor,
+                     z: torch.tensor,
+                     zerr_re: torch.tensor,
+                     zerr_im: torch.tensor
+                     ) -> torch.tensor:
         """
         Computes the weighted residual mean square
 
@@ -487,9 +487,9 @@ class Multieis:
         """
         P_log = self.convert_to_internal(P)
 
-        chitot = self.cost_func(P_log, F, Z, Zerr_Re, Zerr_Im, LB, UB, smf)/self.dof
+        chitot = self.compute_total_obj(P_log, F, Z, Zerr_Re, Zerr_Im, LB, UB, smf)/self.dof
         hess_mat = torch.autograd.functional.hessian(
-            self.cost_func, (P_log, F, Z, Zerr_Re, Zerr_Im, LB, UB, smf)
+            self.compute_total_obj, (P_log, F, Z, Zerr_Re, Zerr_Im, LB, UB, smf)
         )[0][0]
         try:
             # Here we check to see if the Hessian matrix is singular \
@@ -511,20 +511,20 @@ class Multieis:
         # if the error is nan, a value of 1 is assigned.
         return torch.nan_to_num(perr, nan=1.0e15)
 
-    def cost_func(self,
-                  P: torch.tensor,
-                  F: torch.tensor,
-                  Z: torch.tensor,
-                  Zerr_Re: torch.tensor,
-                  Zerr_Im: torch.tensor,
-                  LB: torch.tensor,
-                  UB: torch.tensor,
-                  smf: torch.tensor
-                  ) -> torch.tensor:
+    def compute_total_obj(self,
+                          P: torch.tensor,
+                          F: torch.tensor,
+                          Z: torch.tensor,
+                          Zerr_Re: torch.tensor,
+                          Zerr_Im: torch.tensor,
+                          LB: torch.tensor,
+                          UB: torch.tensor,
+                          smf: torch.tensor
+                          ) -> torch.tensor:
         """
         This function computes the total scalar objective function to minimize
         which is a combination of the weighted residual sum of squares
-        and the smoothing factor divided by the degrees of freedom
+        and the (second derivative of the params + smoothing factor)
 
         :param P: A 1D tensor of parameter values in \
                   log scale
@@ -568,7 +568,7 @@ class Multieis:
         smf_1 = torch.where(torch.isinf(smf), 0.0, smf)
         chi_smf = ((((self.d2m @ P_log.T) * (self.d2m @ P_log.T)))
                    .sum(0) * smf_1).sum()
-        wrss_tot = _vmap(self.wrss_func, in_dims=(1, None, 1, 1, 1))(
+        wrss_tot = _vmap(self.compute_wrss, in_dims=(1, None, 1, 1, 1))(
             P_norm, F, Z, Zerr_Re, Zerr_Im
         )
         return (torch.sum(wrss_tot) + chi_smf)
@@ -599,7 +599,7 @@ class Multieis:
 
         :returns: A 2D tensor of the standard error on the parameters
 
-        Ref
+        Notes
         ----
         Bates, D. M., Watts, D. G. (1988). Nonlinear regression analysis \
         and its applications. New York [u.a.]: Wiley. ISBN: 0471816434
@@ -608,7 +608,7 @@ class Multieis:
             return torch.autograd.functional.jacobian(self.func, (p, f))[0]
         perr = torch.zeros(self.num_params, self.num_eis)
         for i in range(self.num_eis):
-            wrms = self.wrms_func(P[:, i], X, Z[:, i], Zerr_Re[:, i], Zerr_Im[:, i])
+            wrms = self.compute_wrms(P[:, i], X, Z[:, i], Zerr_Re[:, i], Zerr_Im[:, i])
             gradsre = grad_func(P[:, i], X)[:self.num_freq]
             gradsim = grad_func(P[:, i], X)[self.num_freq:]
             diag_wtre_matrix = torch.diag((1/Zerr_Re[:, i]))
@@ -656,7 +656,7 @@ class Multieis:
         :returns: A value for the AIC
         """
 
-        wrss = self.wrss_func(p, f, z, zerr_re, zerr_im)
+        wrss = self.compute_wrss(p, f, z, zerr_re, zerr_im)
         if self.weight_name == "sigma":
             m2lnL = (
                 (2 * self.num_freq) * torch.log(torch.tensor(2 * torch.pi))
@@ -738,7 +738,7 @@ class Multieis:
 
         def closure():
             optimizer.zero_grad()
-            loss = self.cost_func(
+            loss = self.compute_total_obj(
                 self.par_log,
                 self.F,
                 self.Z,
@@ -776,7 +776,7 @@ class Multieis:
         )
 
         self.chisqr = torch.mean(
-            _vmap(self.wrms_func, in_dims=(1, None, 1, 1, 1))(
+            _vmap(self.compute_wrms, in_dims=(1, None, 1, 1, 1))(
                 self.popt, self.F, self.Z, self.Zerr_Re, self.Zerr_Im
             )
         )
@@ -838,7 +838,7 @@ class Multieis:
 
             optimizer.zero_grad()
             # loss = get_loss(param,f_data,Z_data)
-            self.loss = self.cost_func(
+            self.loss = self.compute_total_obj(
                 self.par_log,
                 self.F,
                 self.Z,
@@ -876,7 +876,7 @@ class Multieis:
         )
 
         self.chisqr = torch.mean(
-            _vmap(self.wrms_func, in_dims=(1, None, 1, 1, 1))(
+            _vmap(self.compute_wrms, in_dims=(1, None, 1, 1, 1))(
                 self.popt, self.F, self.Z, self.Zerr_Re, self.Zerr_Im
             )
         )
@@ -940,7 +940,7 @@ class Multieis:
 
         def closure():
             optimizer.zero_grad()
-            loss = self.cost_func(
+            loss = self.compute_total_obj(
                 self.par_log,
                 self.F,
                 self.Z,
@@ -975,7 +975,7 @@ class Multieis:
 
         self.chisqr = (
             torch.mean(
-                _vmap(self.wrms_func, in_dims=(1, None, 1, 1, 1))(
+                _vmap(self.compute_wrms, in_dims=(1, None, 1, 1, 1))(
                     self.popt, self.F, self.Z, self.Zerr_Re, self.Zerr_Im
                 )
             )
@@ -1064,7 +1064,7 @@ class Multieis:
                 )
             except ValueError:
                 pfit = self.encode(params_init[:, val], self.lb, self.ub)
-                chi2 = self.wrss_func_ls(
+                chi2 = self.compute_rss(
                     params_init[:, val],
                     self.F,
                     self.Z[:, val],
@@ -1089,7 +1089,7 @@ class Multieis:
                 self.Zerr_Re[:, val],
                 self.Zerr_Im[:, val],
             )
-            jac = self.jac_fun(
+            jac = self.compute_jac(
                 params_init[:, val],
                 self.F,
                 self.Z[:, val],
@@ -1188,7 +1188,7 @@ class Multieis:
             )
 
         self.n_boots = n_boots
-        wrms = _vmap(self.wrms_func, in_dims=(1, None, 1, 1, 1))(
+        wrms = _vmap(self.compute_wrms, in_dims=(1, None, 1, 1, 1))(
             self.popt, self.F, self.Z, self.Zerr_Re, self.Zerr_Im
         )
 
@@ -1306,22 +1306,22 @@ class Multieis:
             when set to inf, the corresponding parameter is kept constant
         """
         res = minimize(
-            lambda p0: self.cost_func(p0, f, z, zerr_re, zerr_im, lb, ub, smf),
+            lambda p0: self.compute_total_obj(p0, f, z, zerr_re, zerr_im, lb, ub, smf),
             p,
             method="bfgs",
             max_iter=5000,
         )
         return res
 
-    def jac_fun(self,
-                p: torch.tensor,
-                f: torch.tensor,
-                z: torch.tensor,
-                zerr_re: torch.tensor,
-                zerr_im: torch.tensor,
-                lb: torch.tensor,
-                ub: torch.tensor,
-                ) -> torch.tensor:
+    def compute_jac(self,
+                    p: torch.tensor,
+                    f: torch.tensor,
+                    z: torch.tensor,
+                    zerr_re: torch.tensor,
+                    zerr_im: torch.tensor,
+                    lb: torch.tensor,
+                    ub: torch.tensor,
+                    ) -> torch.tensor:
         """
         Computes the Jacobian of the least squares \
         objective function w.r.t the parameters
@@ -1347,7 +1347,7 @@ class Multieis:
         :returns:  Returns the Jacobian matrix
         """
         return torch.autograd.functional.jacobian(
-            self.wrss_func_ls, (p, f, z, zerr_re, zerr_im, lb, ub)
+            self.compute_rss, (p, f, z, zerr_re, zerr_im, lb, ub)
         )[0]
 
     def do_minimize_ls(self,
@@ -1362,7 +1362,7 @@ class Multieis:
         torch.tensor, torch.tensor
     ]:  #
         """
-        Least squares routine - uses wrss_func_ls
+        Least squares routine - uses compute_rss
 
         :param p: A 1D tensor of parameter values
 
@@ -1386,7 +1386,7 @@ class Multieis:
                   and the weighted residual mean square
         """
         res = least_squares(
-            lambda p0: self.wrss_func_ls(p0, f, z, zerr_re, zerr_im, lb, ub), p
+            lambda p0: self.compute_rss(p0, f, z, zerr_re, zerr_im, lb, ub), p
         )
         return res.x, res.fun
 
