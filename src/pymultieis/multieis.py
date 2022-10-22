@@ -284,8 +284,6 @@ class Multieis:
             .toarray()
         )
         self.d2m[0, :4] = [2, -5, 4, -1]
-        for k in range(1, self.num_eis - 1):
-            self.d2m[k, k - 1:k + 2] = [1, -2, 1]
         self.d2m[-1, -4:] = [-1, 4, -5, 2]
         return torch.tensor(self.d2m).type(torch.FloatTensor)
 
