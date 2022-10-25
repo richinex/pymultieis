@@ -1,7 +1,6 @@
 import os
 import numpy as np
 import pandas as pd
-import scipy.sparse as sps
 import torch
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -277,15 +276,12 @@ class Multieis:
 
         :returns: Finite difference stencil for a second order derivative
         """
-        self.d2m = (
-            sps.diags([1, -2, 1], [-1, 0, 1],
-                      shape=(self.num_eis, self.num_eis))
-            .tolil()
-            .toarray()
-        )
-        self.d2m[0, :4] = [2, -5, 4, -1]
-        self.d2m[-1, -4:] = [-1, 4, -5, 2]
-        return torch.tensor(self.d2m).type(torch.FloatTensor)
+        self.d2m = torch.zeros(size=(self.num_eis, self.num_eis))
+        self.d2m[0, :4] = torch.tensor([2, -5, 4, -1])
+        for k in range(1, self.num_eis - 1):
+            self.d2m[k, k - 1:k + 2] = torch.tensor([1, -2, 1])
+        self.d2m[-1, -4:] = torch.tensor([-1, 4, -5, 2])
+        return self.d2m
 
     def convert_to_internal(self,
                             p: torch.tensor
@@ -573,7 +569,7 @@ class Multieis:
 
     def compute_perr_QR(self,
                         P: torch.tensor,
-                        X: torch.tensor,
+                        F: torch.tensor,
                         Z: torch.tensor,
                         Zerr_Re: torch.tensor,
                         Zerr_Im: torch.tensor
@@ -606,9 +602,9 @@ class Multieis:
             return torch.autograd.functional.jacobian(self.func, (p, f))[0]
         perr = torch.zeros(self.num_params, self.num_eis)
         for i in range(self.num_eis):
-            wrms = self.compute_wrms(P[:, i], X, Z[:, i], Zerr_Re[:, i], Zerr_Im[:, i])
-            gradsre = grad_func(P[:, i], X)[:self.num_freq]
-            gradsim = grad_func(P[:, i], X)[self.num_freq:]
+            wrms = self.compute_wrms(P[:, i], F, Z[:, i], Zerr_Re[:, i], Zerr_Im[:, i])
+            gradsre = grad_func(P[:, i], F)[:self.num_freq]
+            gradsim = grad_func(P[:, i], F)[self.num_freq:]
             diag_wtre_matrix = torch.diag((1/Zerr_Re[:, i]))
             diag_wtim_matrix = torch.diag((1/Zerr_Im[:, i]))
             vre = diag_wtre_matrix.double()@gradsre.double()
