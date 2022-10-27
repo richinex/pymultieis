@@ -46,7 +46,7 @@ We assume that we have our files in the data folder one step above working direc
 
   import numpy as np
   import torch
-  import pymultieis.multieis as pym
+  import pymultieis as pym
 
 .. testsetup::
 
@@ -121,7 +121,11 @@ An even simpler way would be to predefine a function ``par`` which computes the 
 
 .. code-block:: python
 
-  par = lambda a, b: 1/(1/a + 1/b) # Defines the total impedance of circuit elements in parallel
+  def par(a, b):
+    """
+    Defines the total impedance of two circuit elements in parallel
+    """
+    return 1/(1/a + 1/b)
 
   def redox(p, f):
       w = 2*torch.pi*f                      # Angular frequency
@@ -176,8 +180,7 @@ and the :code:`immittance` we are modeling which in this case is the admittance.
    The details of the computation of the standard deviation of the admittance used in this guide is given
    in this `paper <https://doi.org/10.1002/celc.202200109>`_.
    Other methods for obtaining the standard deviation of impedance measurements are briefly described under the :ref:`FAQ-label` section.
-
-To fit using a different weighting scheme, all we need to is replace the weight argument ``Yerr`` with the string "modulus", "proportional" or None(i.e unit).
+   To fit using a different weighting scheme, all we need to is replace the weight argument ``Yerr`` with the strings "modulus", "proportional" or None (i.e unit).
 
 Step 5: Fit the model to data
 =======================================

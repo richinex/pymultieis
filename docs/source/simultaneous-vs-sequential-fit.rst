@@ -48,6 +48,7 @@ A detailed example can be found in the :ref:`examples-label` page.
 
 .. code-block:: python
 
+  import pymultieis as pym
   eis_her_sequential = pym.Multieis(p0, F_her, Y_her, bounds, smf_modulus, her, weight= Yerr, immittance='admittance')
   eis_her_sequential.fit_sequential()
   eis_her_sequential.plot_params()
