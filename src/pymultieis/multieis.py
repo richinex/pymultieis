@@ -2,11 +2,11 @@ import os
 import numpy as np
 import pandas as pd
 import torch
+import functorch
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import logging
 import collections
-from torch._vmap_internals import _vmap
 from typing import Callable, Optional, Dict, Union, Sequence, Tuple
 from torchmin import minimize, ScipyMinimizer, least_squares
 from datetime import datetime
@@ -562,7 +562,7 @@ class Multieis:
         smf_1 = torch.where(torch.isinf(smf), 0.0, smf)
         chi_smf = ((((self.d2m @ P_log.T) * (self.d2m @ P_log.T)))
                    .sum(0) * smf_1).sum()
-        wrss_tot = _vmap(self.compute_wrss, in_dims=(1, None, 1, 1, 1))(
+        wrss_tot = functorch.vmap(self.compute_wrss, in_dims=(1, None, 1, 1, 1))(
             P_norm, F, Z, Zerr_Re, Zerr_Im
         )
         return (torch.sum(wrss_tot) + chi_smf)
@@ -770,12 +770,12 @@ class Multieis:
         )
 
         self.chisqr = torch.mean(
-            _vmap(self.compute_wrms, in_dims=(1, None, 1, 1, 1))(
+            functorch.vmap(self.compute_wrms, in_dims=(1, None, 1, 1, 1))(
                 self.popt, self.F, self.Z, self.Zerr_Re, self.Zerr_Im
             )
         )
         self.AIC = torch.mean(
-            _vmap(self.compute_aic, in_dims=(1, None, 1, 1, 1))(
+            functorch.vmap(self.compute_aic, in_dims=(1, None, 1, 1, 1))(
                 self.popt, self.F, self.Z, self.Zerr_Re, self.Zerr_Im
             )
         )
@@ -870,12 +870,12 @@ class Multieis:
         )
 
         self.chisqr = torch.mean(
-            _vmap(self.compute_wrms, in_dims=(1, None, 1, 1, 1))(
+            functorch.vmap(self.compute_wrms, in_dims=(1, None, 1, 1, 1))(
                 self.popt, self.F, self.Z, self.Zerr_Re, self.Zerr_Im
             )
         )
         self.AIC = torch.mean(
-            _vmap(self.compute_aic, in_dims=(1, None, 1, 1, 1))(
+            functorch.vmap(self.compute_aic, in_dims=(1, None, 1, 1, 1))(
                 self.popt, self.F, self.Z, self.Zerr_Re, self.Zerr_Im
             )
         )
@@ -969,14 +969,14 @@ class Multieis:
 
         self.chisqr = (
             torch.mean(
-                _vmap(self.compute_wrms, in_dims=(1, None, 1, 1, 1))(
+                functorch.vmap(self.compute_wrms, in_dims=(1, None, 1, 1, 1))(
                     self.popt, self.F, self.Z, self.Zerr_Re, self.Zerr_Im
                 )
             )
         )
         self.AIC = (
             torch.mean(
-                _vmap(self.compute_aic, in_dims=(1, None, 1, 1, 1))(
+                functorch.vmap(self.compute_aic, in_dims=(1, None, 1, 1, 1))(
                     self.popt, self.F, self.Z, self.Zerr_Re, self.Zerr_Im
                 )
             )
@@ -1182,7 +1182,7 @@ class Multieis:
             )
 
         self.n_boots = n_boots
-        wrms = _vmap(self.compute_wrms, in_dims=(1, None, 1, 1, 1))(
+        wrms = functorch.vmap(self.compute_wrms, in_dims=(1, None, 1, 1, 1))(
             self.popt, self.F, self.Z, self.Zerr_Re, self.Zerr_Im
         )
 
@@ -1432,7 +1432,7 @@ class Multieis:
                         z: torch.tensor,
                         ) -> torch.tensor:
         """
-        :param z: Takes a real vector of length 2n \
+        :param z: real vector of length 2n \
                   where n is the number of frequencies
 
         :returns: Returns a complex vector of length n.
@@ -1444,7 +1444,7 @@ class Multieis:
                         ) -> torch.tensor:
 
         """
-        :param z: Takes a complex vector of length n \
+        :param z: complex vector of length n \
                   where n is the number of frequencies
 
         :returns: Returns a real vector of length 2n
@@ -1466,8 +1466,8 @@ class Multieis:
         :returns: The predicted immittance (Z_pred) \
                   and its inverse(Y_pred)
         """
-        Z_pred = _vmap(self.real_to_complex, in_dims=0)(
-            _vmap(self.func, in_dims=(1, None))(P, F)
+        Z_pred = functorch.vmap(self.real_to_complex, in_dims=0)(
+            functorch.vmap(self.func, in_dims=(1, None))(P, F)
         ).T
         Y_pred = 1 / Z_pred.clone()
         return Z_pred, Y_pred
