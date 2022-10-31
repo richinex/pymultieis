@@ -1,4 +1,4 @@
-import pymultieis.multieis as pym
+import pymultieis as pym
 import numpy as np
 import torch
 import os
@@ -305,10 +305,10 @@ def test_save_and_read_results(rootdir):
         immittance='admittance'
         )
     popt, perr, chisqr, chitot, AIC = multieis_instance.fit_simultaneous(method='bfgs')
-    popt_test_file = os.path.join(rootdir, 'test_results/results/test_results_popt.npy')
-    perr_test_file = os.path.join(rootdir, 'test_results/results/test_results_perr.npy')
-    popt_test = np.load(popt_test_file)
-    perr_test = np.load(perr_test_file)
-    assert np.allclose(popt, popt_test, rtol=1e-3, atol=1e-3, equal_nan=True)
-    assert np.allclose(perr, perr_test, rtol=1e-3, atol=1e-3, equal_nan=True)
-    assert np.allclose(popt_test.shape, perr_test.shape, rtol=1e-3, atol=1e-3, equal_nan=True)
+    popt_true_file = os.path.join(rootdir, 'test_results/results/popt_true.npy')
+    perr_true_file = os.path.join(rootdir, 'test_results/results/perr_true.npy')
+    popt_true = np.load(popt_true_file)
+    perr_true = np.load(perr_true_file)
+    assert np.allclose(popt, popt_true, rtol=1e-3, atol=1e-3, equal_nan=True)
+    assert np.allclose(perr, perr_true, rtol=1e-3, atol=1e-3, equal_nan=True)
+    assert np.allclose(popt_true.shape, perr_true.shape)
