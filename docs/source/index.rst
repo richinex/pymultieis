@@ -46,17 +46,13 @@ pymultieis requires:
 -   Pandas (>=1.4.4)
 
 
-
-Several example notebooks are provided in the examples/ directory.
-Opening these will require Jupyter notebook or Jupyter lab.
-
 Examples and Documentation
 ---------------------------
 
 :ref:`quick-start-guide-label` contains a detailed guide on getting started with :code:`pymultieis`.
 It is assumed that the user is already familiar with basic python syntax.
 Detailed tutorials on several aspects of :code:`pymultieis` can be found in the :code:`examples/` directory.
-The documentation can be found at
+
 
 .. toctree::
    :maxdepth: 2
