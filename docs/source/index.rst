@@ -40,7 +40,7 @@ pymultieis requires:
 
 -   Python (>=3.9)
 -   `torch <https://pytorch.org/get-started/locally/>`_ (>=1.13.1)
--   `pytorch-minimize <(https://pytorch-minimize.readthedocs.io/en/latest/install.html>`_`
+-   `pytorch-minimize <https://pytorch-minimize.readthedocs.io/en/latest/install.html>`_`
 -   Matplotlib (>=3.6.0)
 -   NumPy (>=1.23.3)
 -   Pandas (>=1.4.4)
