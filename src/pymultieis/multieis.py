@@ -503,8 +503,8 @@ class Multieis:
 
         # The covariance matrix of the parameter estimates
         # is (asymptotically) the inverse of the hessian matrix
-        cov_mat = hess_inv * chitot
-        std_error = torch.sqrt(torch.diag(cov_mat))
+        self.cov_mat = hess_inv * chitot
+        std_error = torch.sqrt(torch.diag(self.cov_mat))
         perr = torch.zeros(self.num_params, self.num_eis)
         for i in range(self.num_params):
             perr[i, :] = std_error[self.kvals[i]:self.kvals[i + 1]]
@@ -1102,8 +1102,8 @@ class Multieis:
             hess = jac.T @ jac
             try:
                 hess_inv = torch.linalg.inv(hess)
-                cov_mat = hess_inv * (chisqr[i])
-                perr[:, i] = torch.sqrt(torch.diag(cov_mat)) * popt[:, i]
+                self.cov_mat_single = hess_inv * (chisqr[i])
+                perr[:, i] = torch.sqrt(torch.diag(self.cov_mat_single)) * popt[:, i]
             except torch.linalg.LinAlgError:
                 print(
                     "Matrix is singular for spectra {}, using QR decomposition"
