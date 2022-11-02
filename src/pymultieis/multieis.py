@@ -149,13 +149,21 @@ class Multieis:
 
         self.smf = smf.type(torch.FloatTensor)
 
+        self.smf_1 = torch.where(torch.isinf(self.smf), 0.0, self.smf)
+
         self.kvals = torch.cumsum(
             np.insert(torch.where(
                 torch.isinf(self.smf), 1, self.num_eis), 0, 0), dim=0
         )
+
+        self.gather_indices = torch.zeros(size=(self.num_params, self.num_eis), dtype=torch.int64)
+        for i in range(self.num_params):
+            self.gather_indices[i, :] = torch.arange(self.kvals[i], self.kvals[i+1])
+
         self.d2m = self.get_fd()
         self.dof = (2 * self.num_freq * self.num_eis) - \
             (self.num_params * self.num_eis)
+
         self.plot_title1 = " ".join(
             [x.title() for x in self.immittance_list if (x == self.immittance)]
         )
@@ -276,7 +284,7 @@ class Multieis:
 
         :returns: Finite difference stencil for a second order derivative
         """
-        self.d2m = torch.zeros(size=(self.num_eis, self.num_eis))
+        self.d2m = torch.zeros(size=(self.num_eis, self.num_eis), dtype=torch.float32)
         self.d2m[0, :4] = torch.tensor([2, -5, 4, -1])
         for k in range(1, self.num_eis - 1):
             self.d2m[k, k - 1:k + 2] = torch.tensor([1, -2, 1])
@@ -545,23 +553,22 @@ class Multieis:
         :returns: A scalar value of the total objective function
 
         """
-        P_log = torch.zeros(self.num_params, self.num_eis)
-        P_norm = torch.zeros(self.num_params, self.num_eis)
-        for i in range(self.num_params):
-            P_log[i, :] = P[self.kvals[i]:self.kvals[i + 1]]
 
-            P_norm[i, :] = (
-                LB[self.kvals[i]:self.kvals[i + 1]]
-                + torch.pow(10, P[self.kvals[i]:self.kvals[i + 1]])
-            ) / (
-                1
-                + (torch.pow(10, P[self.kvals[i]:self.kvals[i + 1]]))
-                / UB[self.kvals[i]:self.kvals[i + 1]]
-            )
+        P_log = torch.take(P, self.gather_indices)
 
-        smf_1 = torch.where(torch.isinf(smf), 0.0, smf)
-        chi_smf = ((((self.d2m @ P_log.T) * (self.d2m @ P_log.T)))
-                   .sum(0) * smf_1).sum()
+        up = (10 ** P_log)
+
+        P_norm = (
+            torch.take(LB, self.gather_indices)
+            + up
+        ) / (
+            1
+            + up
+            / torch.take(UB, self.gather_indices)
+        )
+
+        chi_smf = ((((self.d2m @ P_log.T.float()) * (self.d2m @ P_log.T.float())))
+                   .sum(0) * smf).sum()
         wrss_tot = functorch.vmap(self.compute_wrss, in_dims=(1, None, 1, 1, 1))(
             P_norm, F, Z, Zerr_Re, Zerr_Im
         )
@@ -740,7 +747,7 @@ class Multieis:
                 self.Zerr_Im,
                 self.lb_vec,
                 self.ub_vec,
-                self.smf,
+                self.smf_1,
             )
             loss.backward()
             print(
@@ -766,7 +773,7 @@ class Multieis:
             self.Zerr_Im,
             self.lb_vec,
             self.ub_vec,
-            self.smf,
+            self.smf_1,
         )
 
         self.chisqr = torch.mean(
@@ -840,7 +847,7 @@ class Multieis:
                 self.Zerr_Im,
                 self.lb_vec,
                 self.ub_vec,
-                self.smf,
+                self.smf_1,
             )
 
             if epoch % int(self.num_epochs / 10) == 0:
@@ -866,7 +873,7 @@ class Multieis:
             self.Zerr_Im,
             self.lb_vec,
             self.ub_vec,
-            self.smf,
+            self.smf_1,
         )
 
         self.chisqr = torch.mean(
@@ -1245,7 +1252,7 @@ class Multieis:
                 Zerr_Im_mc,
                 self.lb_vec,
                 self.ub_vec,
-                self.smf,
+                self.smf_1,
             )
 
             popt_log_mc[i, :] = res.x
