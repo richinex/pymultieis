@@ -7,7 +7,7 @@
 | [**Citing this work**](#citation)
 
 
-A library for fitting a sequence of electrochemical impedance spectra.
+A library for fitting a sequence of electrochemical impedance spectra (PyTorch version).
 
 - Implements algorithms for simultaneous and sequential fitting.
 
