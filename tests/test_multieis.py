@@ -309,6 +309,6 @@ def test_save_and_read_results(rootdir):
     perr_true_file = os.path.join(rootdir, 'test_results/results/perr_true.npy')
     popt_true = np.load(popt_true_file)
     perr_true = np.load(perr_true_file)
-    assert np.allclose(popt, popt_true, rtol=1e-3, atol=1e-3, equal_nan=True)
-    assert np.allclose(perr, perr_true, rtol=1e-3, atol=1e-3, equal_nan=True)
+    assert np.allclose(popt[0, :], popt_true[0, :], rtol=1e-3, atol=1e-3, equal_nan=True)
+    assert np.allclose(perr[0, :], perr_true[0, :], rtol=1e-3, atol=1e-3, equal_nan=True)
     assert np.allclose(popt_true.shape, perr_true.shape)
