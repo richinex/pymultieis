@@ -510,7 +510,6 @@ class Multieis:
             perr[i, :] = std_error[self.kvals[i]:self.kvals[i + 1]]
 
         perr = perr.detach().clone() * P
-        # if the error is nan, a value of 1 is assigned.
         return torch.nan_to_num(perr, nan=1.0e15)
 
     def compute_total_obj(self,
