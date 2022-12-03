@@ -195,7 +195,7 @@ setting ``learning_rate`` = 1e-3 and ``num_epochs`` = 5e5 is probably sufficient
 
 .. code-block:: python
 
-  popt, perr, chisqr, chitot, AIC = eis_redox.fit_deterministic()
+  popt, perr, chisqr, chitot, AIC = eis_redox.fit_simultaneous()
 
 Step 6: Visualize the plots
 =====================================
